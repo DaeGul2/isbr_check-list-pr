@@ -1,0 +1,72 @@
+/* src/pages/AdminSettings.module.css */
+.container {
+    padding: 20px;
+    max-width: 600px;
+    margin: auto;
+  }
+  
+  .inputGroup {
+    margin-bottom: 20px;
+  }
+  
+  .inputGroup label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  .inputGroup input {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .buttonGroup {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .buttonGroup button {
+    flex: 1;
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .buttonGroup button:hover {
+    background-color: #0056b3;
+  }
+  
+  .itemList {
+    margin-bottom: 20px;
+  }
+  
+  .item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    margin-top: 5px;
+  }
+  
+  .item button {
+    border: none;
+    background-color: #dc3545;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .item button:hover {
+    background-color: #c82333;
+  }
+  
