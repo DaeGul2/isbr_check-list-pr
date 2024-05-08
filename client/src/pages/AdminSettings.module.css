@@ -42,7 +42,29 @@
   .buttonGroup button:hover {
     background-color: #0056b3;
   }
+  .blueButton {
+    background-color: #007bff;
+  }
   
+  .blueButton:hover {
+    background-color: #0056b3;
+  }
+  
+  .redButton {
+    background-color: #dc3545;
+  }
+  
+  .redButton:hover {
+    background-color: #c82333;
+  }
+  
+  .greenButton {
+    background-color: #28a745;
+  }
+  
+  .greenButton:hover {
+    background-color: #218838;
+  }
   .itemList {
     margin-bottom: 20px;
   }
@@ -68,5 +90,20 @@
   
   .item button:hover {
     background-color: #c82333;
+  }
+  
+  .backButton {
+    padding: 10px 20px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .backButton:hover {
+    background-color: #0056b3;
   }
   

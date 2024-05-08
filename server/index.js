@@ -3,11 +3,18 @@
 // dotenv 설정
 require('dotenv').config();
 
+
+
 const express = require('express');
 const mongoose = require('mongoose');
 const http = require('http');
 const socketIo = require('socket.io');
+const cors = require('cors');
+
+/*-----routes -----------*/
 const projectRoutes = require('./routes/projectRoutes'); // 라우터 파일 경로 수정
+const getProjectsRoutes = require('./routes/getProjectsRoutes');
+/*------routes end-------*/
 
 const app = express();
 const server = http.createServer(app);
@@ -25,6 +32,8 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
     // Express JSON 미들웨어
     app.use(express.json());
 
+    app.use(cors());
+
     // socket.io 연결 설정
     io.on('connection', (socket) => {
       console.log('새로운 소켓 연결:', socket.id);
@@ -38,6 +47,7 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
 
     // 라우터 등록
     app.use('/api/projects', projectRoutes);
+    app.use('/api/projects',getProjectsRoutes);
 
     server.listen(PORT, () => {
       console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);

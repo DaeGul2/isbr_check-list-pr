@@ -4,7 +4,7 @@ const Tasks = require('../models/Task');
 // 최초 프로젝트 생성 컨트롤러
 exports.createProject = async (req, res) => {
   try {
-    const { overseers, projectName, venueName, numberOfRooms, toCheckList } = req.body;
+    const { overseers, projectName, venueName, numberOfRooms, toCheckList, examDate } = req.body;
 
     // toCheckList를 기반으로 examRooms 생성
     const examRooms = Array.from({ length: numberOfRooms }, (_, index) => ({
@@ -21,7 +21,8 @@ exports.createProject = async (req, res) => {
       venueName,
       numberOfRooms,
       toCheckList,
-      examRooms
+      examRooms,
+      examDate: new Date(examDate)
     });
 
     // MongoDB에 저장
@@ -36,5 +37,31 @@ exports.createProject = async (req, res) => {
     // 에러 처리
     console.error('Error creating project:', error);
     res.status(500).json({ message: 'Error creating project' });
+  }
+};
+
+
+// 모든 현재 진행 중인 프로젝트 조회
+exports.getProjects = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;   // 요청에서 page를 받아오고, 기본값은 1
+    const pageSize = parseInt(req.query.pageSize) || 10; // 페이지 크기, 기본값은 10
+
+    // 전체 문서 수 계산
+    const total = await Tasks.countDocuments();
+
+    // 페이지에 맞게 문서 조회
+    const projects = await Tasks.find({}, '_id overseers projectName venueName numberOfRooms examDate')
+                                 .skip((page - 1) * pageSize)
+                                 .limit(pageSize);
+
+    res.status(200).json({
+      total,
+      pages: Math.ceil(total / pageSize),
+      data: projects
+    });
+  } catch (error) {
+    console.error('Error retrieving projects:', error);
+    res.status(500).json({ message: 'Failed to retrieve projects' });
   }
 };

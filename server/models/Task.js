@@ -19,6 +19,7 @@ const taskSchema = new Schema({
   venueName: { type: String, required: true },
   numberOfRooms: { type: Number, required: true },
   toCheckList:[{type: String, required: true}],
+  examDate: { type: Date, required: true },  // 날짜 필드 추가,
   examRooms: [examRoomSchema]
 });
 
