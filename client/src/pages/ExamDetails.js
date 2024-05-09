@@ -9,12 +9,40 @@ const ExamDetails = () => {
   const socket = io(API_URL);
   const [projectData, setProjectData] = useState({});
   const [isLoaded, setIsLoaded] = useState(false); // 로딩 상태 추가
+  
+
+    
+  useEffect(() => {
+    // 초기 데이터 로드
+    handleGetProjects();
+
+    // 서버로부터 업데이트된 데이터 수신
+    socket.on('dataUpdated', (updatedData) => {
+      console.log('Data updated:', updatedData);
+      setProjectData(updatedData); // 데이터 업데이트
+    });
+
+    // 클린업 함수
+    return () => {
+      socket.off('dataUpdated'); // 이벤트 리스너 제거
+    };
+  }, []);
+
+
+
+
+
+
+
+
+
 
   const { code } = useParams();  // 경로 파라미터에서 code 받기
   const handleGetProjects = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/exams?code=${code}`);
       setProjectData(response.data);
+      console.log(response.data)
       setIsLoaded(true); // 데이터 로드 완료 시 로딩 상태 업데이트
     } catch (error) {
       console.error('Failed to fetch project data:', error);
@@ -73,10 +101,10 @@ const ExamDetails = () => {
           </thead>
           <tbody>
             {projectData.examRooms.map((room, index) => (
-              <tr key={index}>
+              <tr key={room._id}>
                 <td>{room.roomNum}</td>
                 <td>{room.manager}</td>
-                {room.checklistItems.map((checkItem, idx) => (
+                {projectData.toCheckList.map((checkItem, idx) => (
                   <td key={idx}>{room.checklistItems[checkItem]}</td> // 각 체크리스트 상태를 셀로 추가
                 ))}
               </tr>

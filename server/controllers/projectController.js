@@ -19,11 +19,11 @@ exports.createProject = async (req, res, io) => {
     // toCheckList를 기반으로 examRooms 생성
     const examRooms = Array.from({ length: numberOfRooms }, (_, index) => ({
       roomNum: index + 1, // 방 번호 설정, 1부터 시작
-      checklistItems: toCheckList.map(item => ({
-        details: new Map([[item, ""]]) // toCheckList의 각 항목을 key로 사용하고, 초기값은 빈 문자열
-      }))
+      checklistItems: toCheckList.reduce((acc, curr) => {
+        acc[curr] = false; // toCheckList의 각 항목을 키로 사용하고, 초기값은 false
+        return acc;
+      }, {})
     }));
-
     // 새로운 프로젝트 document 생성
     const project = new Tasks({
       overseers,

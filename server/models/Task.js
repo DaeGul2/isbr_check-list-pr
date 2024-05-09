@@ -1,17 +1,21 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const checklistItemSchema = new Schema({
-  details: {
-    type: Map,
-    of: String
-  }
-});
+// const checklistItemSchema = new Schema({
+//   details: {
+//     type: Map,
+//     of: String
+//   }
+// });
 
 const examRoomSchema = new Schema({
   roomNum: { type: Number, required: true },
-  checklistItems: [checklistItemSchema], // 체크리스트 아이템이 Map 타입으로 정의됨
-  manager:{type: String, required: true, default:" "}
+  checklistItems: {
+    type: Map,
+    of: String,
+    default: {} // 기본값은 빈 객체
+  },
+  manager: { type: String, required: true, default: " " }
 });
 
 const taskSchema = new Schema({
