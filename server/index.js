@@ -41,10 +41,12 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
     // 라우터 인스턴스화 및 소켓 전달
     const projectRoutes = require('./routes/projectRoutes')(io);
     const getProjectsRoutes = require('./routes/getProjectsRoutes')(io);
+    const getExamDetailsRoutes = require('./routes/getExamDetailsRoutes')(io);
 
     // 라우터 등록
     app.use('/api/projects', projectRoutes);
     app.use('/api/projects', getProjectsRoutes);
+    app.use('/api/exams', getExamDetailsRoutes);
 
     server.listen(PORT, () => {
       console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);

@@ -10,7 +10,8 @@ const checklistItemSchema = new Schema({
 
 const examRoomSchema = new Schema({
   roomNum: { type: Number, required: true },
-  checklistItems: [checklistItemSchema] // 체크리스트 아이템이 Map 타입으로 정의됨
+  checklistItems: [checklistItemSchema], // 체크리스트 아이템이 Map 타입으로 정의됨
+  manager:{type: String, required: true, default:" "}
 });
 
 const taskSchema = new Schema({
