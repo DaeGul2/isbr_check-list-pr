@@ -31,7 +31,7 @@ const Home = () => {
           <h1 className="mb-4 title">인사바른 체크리스트</h1>
           <div className="d-grid gap-2">
             <button className="btn btn-primary btn-lg" onClick={() => toggleModal()}>관리페이지</button>
-            <Link to="/exam-info" className="btn btn-secondary btn-lg">진행요원 입장</Link>
+            <Link to="/exam-info" className="btn btn-secondary btn-lg">진행감독 입장</Link>
           </div>
         </div>
       </div>

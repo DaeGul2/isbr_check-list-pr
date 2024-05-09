@@ -100,6 +100,7 @@ const AdminSettings = () => {
           <tr>
             <th>연번</th>
             <th>시험</th>
+            <th style={{color:"red"}}>코드</th>
             <th>고사장</th>
             <th>고사실</th>
             <th>관리자</th>
@@ -111,11 +112,12 @@ const AdminSettings = () => {
             <tr key={project._id}>
               <td>{index + 1}</td>
               <td>{project.projectName}</td>
+              <td style={{color:"red"}}>{project.code}</td>
               <td>{project.venueName}</td>
               <td>{project.numberOfRooms}</td>
               <td>{project.overseers.join(', ')}</td> {/* 관리자 배열을 문자열로 변환 */}
               <td>{new Date(project.examDate).toLocaleDateString()}</td>
-            </tr>
+            </tr> 
           ))}
         </tbody>
       </table>

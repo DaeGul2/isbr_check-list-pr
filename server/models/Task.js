@@ -16,6 +16,7 @@ const examRoomSchema = new Schema({
 const taskSchema = new Schema({
   overseers: [{ type: String, required: true }],
   projectName: { type: String, required: true },
+  code:{type: String, required : true},
   venueName: { type: String, required: true },
   numberOfRooms: { type: Number, required: true },
   toCheckList:[{type: String, required: true}],

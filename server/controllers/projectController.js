@@ -1,11 +1,21 @@
 // controllers/projectController.js
 const Tasks = require('../models/Task');
 
+function generateCode() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+
+
 // 최초 프로젝트 생성 컨트롤러
-exports.createProject = async (req, res,io) => {
+exports.createProject = async (req, res, io) => {
   try {
     const { overseers, projectName, venueName, numberOfRooms, toCheckList, examDate } = req.body;
-
+    let code, existingProject;
+    do {
+      code = generateCode();
+      existingProject = await Tasks.findOne({ code }); // 코드 중복 검사
+    } while (existingProject); // 중복되는 코드가 있으면 반복
     // toCheckList를 기반으로 examRooms 생성
     const examRooms = Array.from({ length: numberOfRooms }, (_, index) => ({
       roomNum: index + 1, // 방 번호 설정, 1부터 시작
@@ -17,6 +27,7 @@ exports.createProject = async (req, res,io) => {
     // 새로운 프로젝트 document 생성
     const project = new Tasks({
       overseers,
+      code,
       projectName,
       venueName,
       numberOfRooms,
@@ -52,9 +63,9 @@ exports.getProjects = async (req, res, io) => {
     const total = await Tasks.countDocuments();
 
     // 페이지에 맞게 문서 조회
-    const projects = await Tasks.find({}, '_id overseers projectName venueName numberOfRooms examDate')
-                                 .skip((page - 1) * pageSize)
-                                 .limit(pageSize);
+    const projects = await Tasks.find({}, '_id overseers projectName venueName numberOfRooms examDate code')
+      .skip((page - 1) * pageSize)
+      .limit(pageSize);
 
     io.emit('projectsFetched', { total, pages: Math.ceil(total / pageSize), data: projects });
     res.status(200).json({
