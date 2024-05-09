@@ -2,7 +2,7 @@
 const Tasks = require('../models/Task');
 
 // 최초 프로젝트 생성 컨트롤러
-exports.createProject = async (req, res) => {
+exports.createProject = async (req, res,io) => {
   try {
     const { overseers, projectName, venueName, numberOfRooms, toCheckList, examDate } = req.body;
 
@@ -28,6 +28,7 @@ exports.createProject = async (req, res) => {
     // MongoDB에 저장
     const newProject = await project.save();
 
+    io.emit('projectCreated', { message: 'Project successfully created', project: newProject });
     // 클라이언트에 응답
     res.status(201).json({
       message: "Project successfully created",
@@ -42,10 +43,10 @@ exports.createProject = async (req, res) => {
 
 
 // 모든 현재 진행 중인 프로젝트 조회
-exports.getProjects = async (req, res) => {
+exports.getProjects = async (req, res, io) => {
   try {
     const page = parseInt(req.query.page) || 1;   // 요청에서 page를 받아오고, 기본값은 1
-    const pageSize = parseInt(req.query.pageSize) || 10; // 페이지 크기, 기본값은 10
+    const pageSize = parseInt(req.query.pageSize) || 30; // 페이지 크기, 기본값은 10
 
     // 전체 문서 수 계산
     const total = await Tasks.countDocuments();
@@ -55,6 +56,7 @@ exports.getProjects = async (req, res) => {
                                  .skip((page - 1) * pageSize)
                                  .limit(pageSize);
 
+    io.emit('projectsFetched', { total, pages: Math.ceil(total / pageSize), data: projects });
     res.status(200).json({
       total,
       pages: Math.ceil(total / pageSize),

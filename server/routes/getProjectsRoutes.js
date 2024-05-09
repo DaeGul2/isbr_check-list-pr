@@ -1,10 +1,12 @@
-// routes/projectRoutes.js
-const express = require('express');
-const router = express.Router();
-const projectController = require('../controllers/projectController');
-
-
-// GET 요청으로 현재 진행 중인 프로젝트들 조회
-router.get('/', projectController.getProjects);
-
-module.exports = router;
+// routes/getProjectsRoutes.js
+module.exports = (io) => {
+    const express = require('express');
+    const router = express.Router();
+    const projectController = require('../controllers/projectController');
+  
+    // 소켓 인스턴스를 함께 넘기는 GET 요청 라우트
+    router.get('/', (req, res) => projectController.getProjects(req, res, io));
+  
+    return router;
+  };
+  
