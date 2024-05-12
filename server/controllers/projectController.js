@@ -82,31 +82,34 @@ exports.getProjects = async (req, res, io) => {
 
 
 exports.updateExamRoom = async (req, res, io) => {
-
-
   try {
     const { manager, checklistItems, projectId, roomId } = req.body;
     const mongoose = require('mongoose');
-    const projectObjectId = mongoose.Types.ObjectId(projectId);
-    const roomObjectId = mongoose.Types.ObjectId(roomId);
+    const projectObjectId = new mongoose.Types.ObjectId(projectId);
+    const roomObjectId = new mongoose.Types.ObjectId(roomId);
 
     const project = await Tasks.findById(projectObjectId);
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
 
-    const roomIndex = project.examRooms.findIndex(room => room._id.toString() === roomObjectId);
+    // 문자열로 변환하여 비교
+    const roomIndex = project.examRooms.findIndex(room => room._id.toString() === roomObjectId.toString());
     if (roomIndex === -1) {
       return res.status(404).json({ message: 'Room not found' });
     }
 
+    // manager와 checklistItems 업데이트
     project.examRooms[roomIndex].manager = manager;
     project.examRooms[roomIndex].checklistItems = checklistItems;
 
+    // 데이터베이스에 변경사항 저장
     const updatedProject = await project.save();
 
-    io.emit('projectUpdated', updatedProject); // 변경된 데이터를 클라이언트로 송신
+    // 클라이언트에 업데이트된 프로젝트 정보 송신
+    io.emit('projectUpdated', updatedProject);
 
+    // 성공 응답 보내기
     res.status(200).json({ message: 'Exam room updated successfully', project: updatedProject });
   } catch (error) {
     console.error('Error updating exam room:', error);

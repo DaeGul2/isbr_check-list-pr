@@ -3,77 +3,57 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
 
-
 const ExamDetails = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
   const socket = io(API_URL);
   const [projectData, setProjectData] = useState({});
-  const [isLoaded, setIsLoaded] = useState(false); // 로딩 상태 추가
+  const [isLoaded, setIsLoaded] = useState(false);
   
-
-    
   useEffect(() => {
-    // 초기 데이터 로드
-    handleGetProjects();
-
-    // 서버로부터 업데이트된 데이터 수신
-    socket.on('dataUpdated', (updatedData) => {
-      console.log('Data updated:', updatedData);
-      setProjectData(updatedData); // 데이터 업데이트
-    });
-
-    // 클린업 함수
-    return () => {
-      socket.off('dataUpdated'); // 이벤트 리스너 제거
+    handleGetProjects(); // Load initial data
+    
+    const handleProjectUpdated = (updatedProject) => {
+      console.log('Project updated:', updatedProject);
+      setProjectData(updatedProject); // Update data in real-time
     };
-  }, []);
+    
+    socket.on('projectUpdated', handleProjectUpdated);
+    
+    return () => {
+      socket.off('projectUpdated', handleProjectUpdated);
+    };
+  }, []); 
 
-
-
-
-
-
-
-
-
-
-  const { code } = useParams();  // 경로 파라미터에서 code 받기
+  const { code } = useParams();
   const handleGetProjects = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/exams?code=${code}`);
       setProjectData(response.data);
-      console.log(response.data)
-      setIsLoaded(true); // 데이터 로드 완료 시 로딩 상태 업데이트
+      setIsLoaded(true);
     } catch (error) {
       console.error('Failed to fetch project data:', error);
       alert('데이터를 불러오는 데 실패했습니다.');
     }
   };
 
-  useEffect(() => {
-    handleGetProjects(); // 초기 데이터 로드
-
-    const handleProjectCreated = (data) => {
-      console.log(data);
-      alert('새로운 프로젝트가 생성됐습니다 : ' + data.project.projectName);
-      handleGetProjects(); // 실시간 목록 갱신
-    };
-
-    socket.on('projectCreated', handleProjectCreated);
-
-    return () => {
-      socket.off('projectCreated', handleProjectCreated);
-    };
-  }, []); // 의존성 배열에 socket을 포함하지 않음
+  const updateExamRoom = async (roomData) => {
+    try {
+      await axios.put(`${API_URL}/api/examroom`, roomData);
+      alert('시험실 정보가 업데이트되었습니다.');
+    } catch (error) {
+      console.error('시험실 업데이트 실패:', error);
+      alert('시험실 정보 업데이트에 실패했습니다.');
+    }
+  };
 
   function formatDate(dateString) {
     const date = new Date(dateString);
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return date.toLocaleDateString('ko-KR', options); // 'ko-KR'은 한국어 설정입니다.
+    return date.toLocaleDateString('ko-KR', options);
   }
 
   if (!isLoaded) {
-    return <div>Loading 중...</div>; // 로딩 중일 때 표시될 내용
+    return <div>Loading 중...</div>;
   }
 
   return (
@@ -95,18 +75,55 @@ const ExamDetails = () => {
               <th>고사실</th>
               <th>담당자</th>
               {projectData.toCheckList.map((item, index) => (
-                <th key={index}>{item}</th> // 각 체크리스트 항목을 헤더로 추가
+                <th key={index}>{item}</th>
               ))}
+              <th>업데이트</th>
             </tr>
           </thead>
           <tbody>
             {projectData.examRooms.map((room, index) => (
               <tr key={room._id}>
                 <td>{room.roomNum}</td>
-                <td>{room.manager}</td>
+                <td>
+                  <input
+                    type="text"
+                    value={room.manager}
+                    onChange={e => {
+                      const updatedRoom = {...room, manager: e.target.value};
+                      setProjectData(current => {
+                        let newData = {...current};
+                        newData.examRooms[index] = updatedRoom;
+                        return newData;
+                      });
+                    }}
+                  />
+                </td>
                 {projectData.toCheckList.map((checkItem, idx) => (
-                  <td key={idx}>{room.checklistItems[checkItem]}</td> // 각 체크리스트 상태를 셀로 추가
+                  <td key={idx} style={{backgroundColor: getBackgroundColor(room.checklistItems[checkItem])}}>
+                    <input
+                      type="checkbox"
+                      checked={room.checklistItems[checkItem] === '완료'}
+                      onChange={e => {
+                        const newValue = e.target.checked ? '완료' : '미완료';
+                        const updatedRoom = {...room};
+                        updatedRoom.checklistItems[checkItem] = newValue;
+                        setProjectData(current => {
+                          let newData = {...current};
+                          newData.examRooms[index] = updatedRoom;
+                          return newData;
+                        });
+                      }}
+                    />
+                  </td>
                 ))}
+                <td>
+                  <button onClick={() => updateExamRoom({
+                    projectId: projectData._id,
+                    roomId: room._id,
+                    manager: room.manager,
+                    checklistItems: room.checklistItems
+                  })}>업데이트</button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -115,5 +132,16 @@ const ExamDetails = () => {
     </div>
   );
 };
+
+function getBackgroundColor(status) {
+  switch (status) {
+    case '완료':
+      return '#ccffcc'; // Light green
+    case '미완료':
+      return '#ffcccc'; // Light red
+    default:
+      return '#ffffff'; // White
+  }
+}
 
 export default ExamDetails;

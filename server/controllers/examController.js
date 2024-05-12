@@ -6,7 +6,6 @@ exports.getExamDetails = async (req, res, io) => {
     try {
         const examDetails = await Tasks.findOne({ code: code }); // MongoDB에서 code로 문서 조회
         if (examDetails) {
-            console.log("시발여기",examDetails);
             res.status(200).json(examDetails);
             io.emit('examUpdated', examDetails); // Socket을 통해 실시간 업데이트 전송
         } else {
