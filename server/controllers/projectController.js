@@ -78,3 +78,38 @@ exports.getProjects = async (req, res, io) => {
     res.status(500).json({ message: 'Failed to retrieve projects' });
   }
 };
+
+
+
+exports.updateExamRoom = async (req, res, io) => {
+
+
+  try {
+    const { manager, checklistItems, projectId, roomId } = req.body;
+    const mongoose = require('mongoose');
+    const projectObjectId = mongoose.Types.ObjectId(projectId);
+    const roomObjectId = mongoose.Types.ObjectId(roomId);
+
+    const project = await Tasks.findById(projectObjectId);
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    const roomIndex = project.examRooms.findIndex(room => room._id.toString() === roomObjectId);
+    if (roomIndex === -1) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    project.examRooms[roomIndex].manager = manager;
+    project.examRooms[roomIndex].checklistItems = checklistItems;
+
+    const updatedProject = await project.save();
+
+    io.emit('projectUpdated', updatedProject); // 변경된 데이터를 클라이언트로 송신
+
+    res.status(200).json({ message: 'Exam room updated successfully', project: updatedProject });
+  } catch (error) {
+    console.error('Error updating exam room:', error);
+    res.status(500).json({ message: 'Error updating exam room' });
+  }
+};
