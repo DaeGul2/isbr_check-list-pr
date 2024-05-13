@@ -2,27 +2,29 @@ import { useParams } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
+import './ExamDetails.css'
+
 
 const ExamDetails = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
   const socket = io(API_URL);
   const [projectData, setProjectData] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
-  
+
   useEffect(() => {
     handleGetProjects(); // Load initial data
-    
+
     const handleProjectUpdated = (updatedProject) => {
       console.log('Project updated:', updatedProject);
       setProjectData(updatedProject); // Update data in real-time
     };
-    
+
     socket.on('projectUpdated', handleProjectUpdated);
-    
+
     return () => {
       socket.off('projectUpdated', handleProjectUpdated);
     };
-  }, []); 
+  }, []);
 
   const { code } = useParams();
   const handleGetProjects = async () => {
@@ -35,6 +37,27 @@ const ExamDetails = () => {
       alert('데이터를 불러오는 데 실패했습니다.');
     }
   };
+
+  const handleManagerChange = (e, index, room) => {
+    const updatedRoom = { ...room, manager: e.target.value };
+    setProjectData(current => {
+      let newData = { ...current };
+      newData.examRooms[index] = updatedRoom;
+      return newData;
+    });
+  };
+
+  const handleChecklistChange = (e, index, checkItem, room) => {
+    const newValue = e.target.checked ? '완료' : '미완료';
+    const updatedRoom = { ...room };
+    updatedRoom.checklistItems[checkItem] = newValue;
+    setProjectData(current => {
+      let newData = { ...current };
+      newData.examRooms[index] = updatedRoom;
+      return newData;
+    });
+  };
+
 
   const updateExamRoom = async (roomData) => {
     try {
@@ -58,61 +81,39 @@ const ExamDetails = () => {
 
   return (
     <div>
-      <h1 key={projectData._id}>시험명 : {projectData.projectName}</h1>
-      <h2>고사장 : {projectData.venueName}</h2>
-      <h2>담당자 : {projectData.overseers.join(' ')}</h2>
-      <h2>날짜 : {formatDate(projectData.examDate)}</h2>
-      <h2>체크리스트 : </h2>
-      <ol>
-        {projectData.toCheckList.map((item, index) => (
-          <li key={index}>{item}</li>
-        ))}
-      </ol>
+      <div className="container mt-4">
+        <div className="card">
+          <div className="card-body">
+            <h1 className="card-title"><i className="fas fa-clipboard-list"></i> 시험명: {projectData.projectName}</h1>
+            <h2 className="card-subtitle mb-2 text-muted"><i className="fas fa-building"></i> 고사장: {projectData.venueName}</h2>
+            <h2 className="card-subtitle mb-2 text-muted"><i className="fas fa-user-check"></i> 담당자: {projectData.overseers.join(' ')}</h2>
+            <h2 className="card-subtitle mb-2 text-muted"><i className="fas fa-calendar-alt"></i> 날짜: {formatDate(projectData.examDate)}</h2>
+            <h2 className="mb-2">체크리스트:</h2>
+            <ol>
+              {projectData.toCheckList.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </div>
+
       <div className="table-responsive">
         <table className="table table-bordered">
-          <thead>
-            <tr>
-              <th>고사실</th>
-              <th>담당자</th>
-              {projectData.toCheckList.map((item, index) => (
-                <th key={index}>{item}</th>
-              ))}
-              <th>업데이트</th>
-            </tr>
-          </thead>
+
           <tbody>
             {projectData.examRooms.map((room, index) => (
               <tr key={room._id}>
-                <td>{room.roomNum}</td>
-                <td>
-                  <input
-                    type="text"
-                    value={room.manager}
-                    onChange={e => {
-                      const updatedRoom = {...room, manager: e.target.value};
-                      setProjectData(current => {
-                        let newData = {...current};
-                        newData.examRooms[index] = updatedRoom;
-                        return newData;
-                      });
-                    }}
-                  />
+                <td data-label="고사실">{room.roomNum}</td>
+                <td data-label="담당자">
+                  <input type="text" value={room.manager} onChange={e => handleManagerChange(e, index, room)} />
                 </td>
                 {projectData.toCheckList.map((checkItem, idx) => (
-                  <td key={idx} style={{backgroundColor: getBackgroundColor(room.checklistItems[checkItem])}}>
+                  <td key={idx} style={{ backgroundColor: getBackgroundColor(room.checklistItems[checkItem]) }} data-label={checkItem}>
                     <input
                       type="checkbox"
                       checked={room.checklistItems[checkItem] === '완료'}
-                      onChange={e => {
-                        const newValue = e.target.checked ? '완료' : '미완료';
-                        const updatedRoom = {...room};
-                        updatedRoom.checklistItems[checkItem] = newValue;
-                        setProjectData(current => {
-                          let newData = {...current};
-                          newData.examRooms[index] = updatedRoom;
-                          return newData;
-                        });
-                      }}
+                      onChange={e => handleChecklistChange(e, index, checkItem, room)}
                     />
                   </td>
                 ))}
@@ -128,6 +129,7 @@ const ExamDetails = () => {
             ))}
           </tbody>
         </table>
+
       </div>
     </div>
   );
