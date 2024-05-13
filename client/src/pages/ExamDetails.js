@@ -99,10 +99,10 @@ const ExamDetails = () => {
     // updateExamRoom(updatedProjectData);  // 이 부분 바꿔야됨.
     console.log("바뀔 부분", updatedProjectData);
     try { 
-      await axios.put(`${API_URL}/api/projcets`, {project:updatedProjectData});
+      await axios.put(`${API_URL}/api/projects`, {updatedProjectData});
       alert('체크리스트가 업데이트되었습니다.');
     } catch (error) {
-      console.error('시험실 업데이트 실패:', error);
+      console.error('체크리스트 업데이트 실패:', error);
       alert('체크리스트 업데이트에 실패했습니다.');
     }
 

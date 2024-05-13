@@ -30,7 +30,7 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
 
     // socket.io 연결 설정
     io.on('connection', (socket) => {
-      console.log('새로운 소켓 연결:', socket.id);
+      // console.log('새로운 소켓 연결:', socket.id);
       
       socket.on('updateChecklist', (data) => {
         console.log('체크리스트 업데이트:', data);
@@ -43,14 +43,14 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
     const getProjectsRoutes = require('./routes/getProjectsRoutes')(io);
     const getExamDetailsRoutes = require('./routes/getExamDetailsRoutes')(io);
     const updateExamRoomRoutes = require('./routes/updateExamRoutes')(io);
-    const updateProjcets = require('./routes/updateProjects')(io);
+    const updateProjcetsRoutes = require('./routes/updateProjects')(io);
 
     // 라우터 등록
     app.use('/api/projects', projectRoutes);
     app.use('/api/projects', getProjectsRoutes);
     app.use('/api/exams', getExamDetailsRoutes);
     app.use('/api/examroom',updateExamRoomRoutes);
-    app.use('/api/projects', updateProjcets);
+    app.use('/api/projects', updateProjcetsRoutes);
 
     server.listen(PORT, () => {
       console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);
