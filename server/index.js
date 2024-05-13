@@ -4,8 +4,10 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const http = require('http');
+const session = require('express-session');
 const socketIo = require('socket.io');
 const cors = require('cors');
+const MongoStore = require('connect-mongo');
 
 const app = express();
 const server = http.createServer(app);
@@ -26,7 +28,19 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
 
     // Express JSON 미들웨어
     app.use(express.json());
-    app.use(cors());
+    app.use(cors(
+      {origin: 'http://localhost:3000',
+        credentials: true}
+    ));
+    app.use(
+      session({
+        secret: 'your_secret_key',
+        resave: false,
+        saveUninitialized: false,
+        store: MongoStore.create({ mongoUrl: MONGODB_URI }),
+        cookie: { maxAge: 86400000 } // 24시간
+      })
+    );
 
     // socket.io 연결 설정
     io.on('connection', (socket) => {
@@ -44,6 +58,7 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
     const getExamDetailsRoutes = require('./routes/getExamDetailsRoutes')(io);
     const updateExamRoomRoutes = require('./routes/updateExamRoutes')(io);
     const updateProjcetsRoutes = require('./routes/updateProjects')(io);
+    const adminRoutes = require('./routes/adminRoutes');
 
     // 라우터 등록
     app.use('/api/projects', projectRoutes);
@@ -51,6 +66,7 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
     app.use('/api/exams', getExamDetailsRoutes);
     app.use('/api/examroom',updateExamRoomRoutes);
     app.use('/api/projects', updateProjcetsRoutes);
+    app.use('/', adminRoutes);
 
     server.listen(PORT, () => {
       console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);

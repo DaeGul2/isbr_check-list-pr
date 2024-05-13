@@ -97,7 +97,6 @@ const ExamDetails = () => {
       toCheckList: [...projectData.toCheckList, ...newChecklistItems]
     };
     // updateExamRoom(updatedProjectData);  // 이 부분 바꿔야됨.
-    console.log("바뀔 부분", updatedProjectData);
     try { 
       await axios.put(`${API_URL}/api/projects`, {updatedProjectData});
       alert('체크리스트가 업데이트되었습니다.');

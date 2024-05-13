@@ -2,25 +2,45 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import './Home.css'; // 스타일시트
+import axios from 'axios';
 
 const Home = () => {
   const [showModal, setShowModal] = useState(false);
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
-  const toggleModal = () => {
-    console.log('Current showModal state:', showModal); // 상태 로깅
-    setShowModal(!showModal);
+   // axios instance 설정
+   const axiosInstance = axios.create({
+    baseURL: API_URL,
+    withCredentials: true
+  });
+
+  const toggleModal = async () => {
+    try {
+      const response = await axiosInstance.get('/auth/check');
+      if (!response.data.isAdmin) {
+        setShowModal(true);
+      } else {
+        navigate('/admin-settings');
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
   };
-  
 
-  const handleLogin = () => {
-    if (code === 'isbr' && password === '8067') {
-      navigate('/admin-settings');
-    } else {
-      alert('코드나 패스워드가 일치하지 않습니다.');
-      setShowModal(false); // 입력이 잘못된 경우 모달 창을 닫습니다.
+  const handleLogin = async () => {
+    try {
+      const response = await axiosInstance.post('/auth/admin', { code, password });
+      if (response.data.isAdmin) {
+        navigate('/admin-settings');
+      } else {
+        setShowModal(false);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+      setShowModal(false);
     }
   };
 

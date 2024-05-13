@@ -27,7 +27,6 @@ const AdminSettings = () => {
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
     try {
       const response = await axios.get(`${API_URL}/api/projects`);
-      console.log("durl", response.data.data)
       setProjectData(response.data.data);
     }
     catch (e) {
@@ -38,7 +37,6 @@ const AdminSettings = () => {
     handleGetProjects(); // 초기 데이터 로드
 
     const handleProjectCreated = (data) => {
-      console.log(data);
       alert('새로운 프로젝트가 생성됐습니다 : ' + data.project.projectName);
       handleGetProjects(); // 실시간 목록 갱신
     };
