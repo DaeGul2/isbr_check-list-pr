@@ -116,3 +116,32 @@ exports.updateExamRoom = async (req, res, io) => {
     res.status(500).json({ message: 'Error updating exam room' });
   }
 };
+
+
+// Express route handler
+exports.updateProject = async (req, res, io) => {
+  try {
+    const { project: newProject } = req.body; // Destructure the project data from request body
+    console.log("씨발 여기", newProjcet);
+    if (!newProject._id) {
+      return res.status(400).send('Project ID is required');
+    }
+
+    // Convert string ID to a MongoDB ObjectId
+    const projectId = newProject._id;
+    const options = { new: true }; // Option to return the updated document
+
+    // Find the document by ID and update it
+    const updatedProject = await Tasks.findByIdAndUpdate(projectId, newProject, options);
+    io.emit('projectUpdated', updatedProject);
+
+    if (!updatedProject) {
+      return res.status(404).send('Project not found');
+    }
+
+    res.send(updatedProject); // Send the updated project back
+  } catch (error) {
+    console.error('Update project failed:', error);
+    res.status(500).send('Server error');
+  }
+};

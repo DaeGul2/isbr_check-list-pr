@@ -3,13 +3,21 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
 import './ExamDetails.css'
+import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { Button, Modal, Form } from 'react-bootstrap';
 
 const ExamDetails = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
   const socket = io(API_URL);
   const [projectData, setProjectData] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
+  const navigate = useNavigate();
+  const [modalShow, setModalShow] = useState(false);
+  const [newChecklistItems, setNewChecklistItems] = useState(['']); // Start with one empty item
+
 
   useEffect(() => {
     handleGetProjects(); // Load initial data
@@ -23,6 +31,7 @@ const ExamDetails = () => {
 
     return () => {
       socket.off('projectUpdated', handleProjectUpdated);
+      
     };
   }, []);
 
@@ -69,6 +78,38 @@ const ExamDetails = () => {
     }
   };
 
+  const handleAddChecklistItem = () => {
+    setNewChecklistItems([...newChecklistItems, '']);
+  };
+
+  const handleRemoveChecklistItem = index => {
+    setNewChecklistItems(newChecklistItems.filter((item, idx) => idx !== index));
+  };
+
+  const handleChecklistItemChange = (event, index) => {
+    const updatedItems = newChecklistItems.map((item, idx) => idx === index ? event.target.value : item);
+    setNewChecklistItems(updatedItems);
+  };
+
+  const handleAddChecklistItemsToProject = async () => {
+    const updatedProjectData = {
+      ...projectData,
+      toCheckList: [...projectData.toCheckList, ...newChecklistItems]
+    };
+    // updateExamRoom(updatedProjectData);  // 이 부분 바꿔야됨.
+    console.log("바뀔 부분", updatedProjectData);
+    try { 
+      await axios.put(`${API_URL}/api/projcets`, {project:updatedProjectData});
+      alert('체크리스트가 업데이트되었습니다.');
+    } catch (error) {
+      console.error('시험실 업데이트 실패:', error);
+      alert('체크리스트 업데이트에 실패했습니다.');
+    }
+
+    setModalShow(false);
+  };
+
+
   function formatDate(dateString) {
     const date = new Date(dateString);
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -98,39 +139,78 @@ const ExamDetails = () => {
         </div>
       </div>
 
-      <div className="table-responsive">
-        <table className="table table-bordered">
-
-          <tbody>
-            {projectData.examRooms.map((room, index) => (
-              <tr key={room._id}>
-                <td data-label="고사실">{room.roomNum}</td>
-                <td data-label="담당자">
-                  <input type="text" value={room.manager} onChange={e => handleManagerChange(e, index, room)} />
-                </td>
-                {projectData.toCheckList.map((checkItem, idx) => (
-                  <td key={idx} style={{ backgroundColor: getBackgroundColor(room.checklistItems[checkItem]) }} data-label={checkItem}>
+      <div className="container mt-3">
+        <div className="row">
+          {projectData.examRooms.map((room, index) => (
+            <div className="col-md-4 mb-4" key={room._id}>
+              <div className="card">
+                <div className="card-header">
+                  고사실: {room.roomNum}
+                </div>
+                <div className="card-body">
+                  <div className="mb-3">
+                    <label className="form-label">담당자:</label>
                     <input
-                      type="checkbox"
-                      checked={room.checklistItems[checkItem] === '완료'}
-                      onChange={e => handleChecklistChange(e, index, checkItem, room)}
+                      type="text"
+                      className="form-control"
+                      value={room.manager}
+                      onChange={e => handleManagerChange(e, index, room)}
                     />
-                  </td>
-                ))}
-                <td>
-                  <button onClick={() => updateExamRoom({
+                  </div>
+                  {projectData.toCheckList.map((checkItem, idx) => (
+                    <div className="form-check mb-2" key={idx}>
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id={`check-${index}-${idx}`}
+                        checked={room.checklistItems[checkItem] === '완료'}
+                        onChange={e => handleChecklistChange(e, index, checkItem, room)}
+                      />
+                      <label className="form-check-label" htmlFor={`check-${index}-${idx}`}>
+                        {checkItem}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                <div className="card-footer text-end">
+                  <FontAwesomeIcon icon={faCheckCircle} className="text-success" style={{ cursor: 'pointer', fontSize: '1.5rem' }} onClick={() => updateExamRoom({
                     projectId: projectData._id,
                     roomId: room._id,
                     manager: room.manager,
                     checklistItems: room.checklistItems
-                  })}>업데이트</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
+                  })} />
+                  <span style={{ fontFamily: 'Indie Flower', fontSize: '1rem', marginLeft: '10px' }}>업데이트</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
+      <Button variant="danger" style={{ position: 'fixed', bottom: '20px', right: '20px' }} onClick={() => setModalShow(true)}>
+        체크리스트 추가
+      </Button>
+
+      <Modal show={modalShow} onHide={() => setModalShow(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>체크리스트 추가</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {newChecklistItems.map((item, index) => (
+            <Form.Group key={index} className="mb-3">
+              <Form.Control type="text" value={item} onChange={(e) => handleChecklistItemChange(e, index)} />
+              {newChecklistItems.length > 1 && (
+                <Button variant="danger" onClick={() => handleRemoveChecklistItem(index)}>삭제</Button>
+              )}
+            </Form.Group>
+          ))}
+          <Button onClick={handleAddChecklistItem}>항목 추가</Button>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setModalShow(false)}>닫기</Button>
+          <Button variant="primary" onClick={handleAddChecklistItemsToProject}>추가</Button>
+        </Modal.Footer>
+      </Modal>
+
     </div>
   );
 };

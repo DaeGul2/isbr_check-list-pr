@@ -47,6 +47,7 @@ const AdminSettings = () => {
 
     return () => {
       socket.off('projectCreated', handleProjectCreated);
+      
     };
   }, []); // 의존성 배열에 socket을 포함하지 않음
 
