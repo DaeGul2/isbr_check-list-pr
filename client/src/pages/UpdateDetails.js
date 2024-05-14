@@ -2,48 +2,39 @@ import { useParams } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
-import './ExamDetails.css';
+import './ExamDetails.css'
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { Button, Modal, Form } from 'react-bootstrap';
 
-const ExamDetails = () => {
+const UpdateDetails = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
   const socket = io(API_URL);
   const [projectData, setProjectData] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
   const navigate = useNavigate();
+  
   const [modalShow, setModalShow] = useState(false);
-  const [newChecklistItems, setNewChecklistItems] = useState(['']);
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedRooms, setSelectedRooms] = useState(() => {
-    const saved = localStorage.getItem('selectedRooms');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [newChecklistItems, setNewChecklistItems] = useState(['']); // Start with one empty item
 
-  const toggleCard = () => {
-    setIsOpen(!isOpen);
-  };
 
   useEffect(() => {
-    handleGetProjects();
+    handleGetProjects(); // Load initial data
 
     const handleProjectUpdated = (updatedProject) => {
       console.log('Project updated:', updatedProject);
-      setProjectData(updatedProject);
+      setProjectData(updatedProject); // Update data in real-time
     };
 
     socket.on('projectUpdated', handleProjectUpdated);
 
     return () => {
       socket.off('projectUpdated', handleProjectUpdated);
+      
     };
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem('selectedRooms', JSON.stringify(selectedRooms));
-  }, [selectedRooms]);
 
   const { code } = useParams();
   const handleGetProjects = async () => {
@@ -77,6 +68,7 @@ const ExamDetails = () => {
     });
   };
 
+
   const updateExamRoom = async (roomData) => {
     try {
       await axios.put(`${API_URL}/api/examroom`, roomData);
@@ -105,8 +97,9 @@ const ExamDetails = () => {
       ...projectData,
       toCheckList: [...projectData.toCheckList, ...newChecklistItems]
     };
-    try {
-      await axios.put(`${API_URL}/api/projects`, { updatedProjectData });
+    // updateExamRoom(updatedProjectData);  // 이 부분 바꿔야됨.
+    try { 
+      await axios.put(`${API_URL}/api/projects`, {updatedProjectData});
       alert('체크리스트가 업데이트되었습니다.');
     } catch (error) {
       console.error('체크리스트 업데이트 실패:', error);
@@ -116,89 +109,39 @@ const ExamDetails = () => {
     setModalShow(false);
   };
 
-  const handleRoomSelection = (e) => {
-    const roomNum = parseInt(e.target.value, 10);
-    if (e.target.checked) {
-      setSelectedRooms([...selectedRooms, roomNum]);
-    } else {
-      setSelectedRooms(selectedRooms.filter(num => num !== roomNum));
-    }
-  };
 
-  const handleSelectAllRooms = (e) => {
-    if (e.target.checked) {
-      const allRooms = Array.from({ length: projectData.numberOfRooms }, (_, i) => i + 1);
-      setSelectedRooms(allRooms);
-    } else {
-      setSelectedRooms([]);
-    }
-  };
-
-  const formatDate = (dateString) => {
+  function formatDate(dateString) {
     const date = new Date(dateString);
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     return date.toLocaleDateString('ko-KR', options);
-  };
+  }
 
   if (!isLoaded) {
     return <div>Loading 중...</div>;
   }
 
-  const filteredRooms = projectData.examRooms.filter(room => selectedRooms.includes(room.roomNum));
-
   return (
     <div>
       <div className="container mt-4">
         <div className="card">
-          <div className="card-header" onClick={toggleCard} style={{ cursor: 'pointer' }}>
+          <div className="card-body">
             <h1 className="card-title"><i className="fas fa-clipboard-list"></i> 시험명: {projectData.projectName}</h1>
-            <button className="btn">{isOpen ? <i>접기△</i> : <i>펼치기▽</i>}</button>
+            <h2 className="mb-2 card-subtitle text-muted"><i className="fas fa-building"></i> 고사장: {projectData.venueName}</h2>
+            <h2 className="mb-2 card-subtitle text-muted"><i className="fas fa-user-check"></i> 담당자: {projectData.overseers.join(' ')}</h2>
+            <h2 className="mb-2 card-subtitle text-muted"><i className="fas fa-calendar-alt"></i> 날짜: {formatDate(projectData.examDate)}</h2>
+            <h2 className="mb-2">체크리스트:</h2>
+            <ol>
+              {projectData.toCheckList.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ol>
           </div>
-          {isOpen && (
-            <div className="card-body">
-              <h2 className="mb-2 card-subtitle text-muted"><i className="fas fa-building"></i> 고사장: {projectData.venueName}</h2>
-              <h2 className="mb-2 card-subtitle text-muted"><i className="fas fa-user-check"></i> 담당자: {projectData.overseers.join(' ')}</h2>
-              <h2 className="mb-2 card-subtitle text-muted"><i className="fas fa-calendar-alt"></i> 날짜: {formatDate(projectData.examDate)}</h2>
-              <h2 className="mb-2">체크리스트:</h2>
-              <ol>
-                {projectData.toCheckList.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ol>
-            </div>
-          )}
         </div>
       </div>
 
       <div className="container mt-3">
-        <div className="room-selection" style={{ overflowX: 'auto', whiteSpace: 'nowrap', marginBottom: '20px' }}>
-          <div style={{ display: 'inline-block', marginRight: '10px' }}>
-            <label>
-              <input
-                type="checkbox"
-                onChange={handleSelectAllRooms}
-                checked={selectedRooms.length === projectData.numberOfRooms}
-              />
-              전체 check
-            </label>
-          </div>
-          {Array.from({ length: projectData.numberOfRooms }, (_, i) => i + 1).map((roomNum) => (
-            <div key={roomNum} style={{ display: 'inline-block', marginRight: '10px' }}>
-              <label>
-                <input
-                  type="checkbox"
-                  value={roomNum}
-                  onChange={handleRoomSelection}
-                  checked={selectedRooms.includes(roomNum)}
-                />
-                {roomNum}
-              </label>
-            </div>
-          ))}
-        </div>
-        
         <div className="row">
-          {(selectedRooms.length > 0 ? filteredRooms : projectData.examRooms).map((room, index) => (
+          {projectData.examRooms.map((room, index) => (
             <div className="mb-4 col-md-4" key={room._id}>
               <div className="card">
                 <div className="card-header">
@@ -243,7 +186,6 @@ const ExamDetails = () => {
           ))}
         </div>
       </div>
-
       <Button variant="danger" style={{ position: 'fixed', bottom: '20px', right: '20px' }} onClick={() => setModalShow(true)}>
         체크리스트 추가
       </Button>
@@ -268,8 +210,20 @@ const ExamDetails = () => {
           <Button variant="primary" onClick={handleAddChecklistItemsToProject}>추가</Button>
         </Modal.Footer>
       </Modal>
+
     </div>
   );
 };
 
-export default ExamDetails;
+function getBackgroundColor(status) {
+  switch (status) {
+    case '완료':
+      return '#ccffcc'; // Light green
+    case '미완료':
+      return '#ffcccc'; // Light red
+    default:
+      return '#ffffff'; // White
+  }
+}
+
+export default UpdateDetails;

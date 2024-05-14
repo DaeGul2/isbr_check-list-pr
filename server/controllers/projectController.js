@@ -145,3 +145,42 @@ exports.updateProject = async (req, res, io) => {
     res.status(500).send('Server error');
   }
 };
+
+exports.deleteProject = async (req, res, io) => {
+  try {
+    const projectId = req.params.projectId;
+
+    // 프로젝트 삭제
+    const deletedProject = await Tasks.findByIdAndDelete(projectId);
+
+    if (!deletedProject) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    // 삭제된 프로젝트 정보를 실시간으로 전달
+    io.emit('projectDeleted', deletedProject);
+
+    res.status(200).json({ message: 'Project deleted successfully', project: deletedProject });
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+exports.getProjectById = async (req, res) => {
+  try {
+    const projectId = req.params.projectId;
+
+    // projectId로 프로젝트 검색
+    const project = await Tasks.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    res.status(200).json({ project });
+  } catch (error) {
+    console.error('Error fetching project:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

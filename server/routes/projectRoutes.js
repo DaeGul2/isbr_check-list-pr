@@ -6,6 +6,7 @@ module.exports = (io) => {
   
     router.post('/create', (req, res) => projectController.createProject(req, res, io));
     router.get('/', (req, res) => projectController.getProjects(req, res, io));
+    router.delete('/:projectId', (req, res) => projectController.deleteProject(req, res, io));
   
     return router;
   };

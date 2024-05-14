@@ -36,3 +36,7 @@
     transform: rotate(360deg);
   }
 }
+
+.body-content {
+  padding-top: 40px;  /* 네비게이션 바 높이에 맞춰 조정 */
+}
