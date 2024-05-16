@@ -10,6 +10,7 @@ const Home = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+  const apiKey = process.env.REACT_APP_API_KEY; // 환경 변수에서 API 키 가져오기
 
    // axios instance 설정
    const axiosInstance = axios.create({
@@ -19,7 +20,11 @@ const Home = () => {
 
   const toggleModal = async () => {
     try {
-      const response = await axiosInstance.get('/auth/check');
+      const response = await axiosInstance.get('/auth/check',{
+        headers: {
+          'x-api-key': apiKey // 헤더에 API 키 포함
+        }
+      });
       if (!response.data.isAdmin) {
         setShowModal(true);
       } else {
@@ -32,7 +37,11 @@ const Home = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await axiosInstance.post('/auth/admin', { code, password });
+      const response = await axiosInstance.post('/auth/admin', { code, password },{
+        headers: {
+          'x-api-key': apiKey // 헤더에 API 키 포함
+        }
+      });
       if (response.data.isAdmin) {
         navigate('/admin-settings');
       } else {

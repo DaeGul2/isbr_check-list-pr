@@ -15,7 +15,9 @@ const examRoomSchema = new Schema({
     of: String,
     default: {} // 기본값은 빈 객체
   },
-  manager: { type: String, required: true, default: " " }
+  manager: { type: String, required: true, default: " " },
+  admin_check: {type: Boolean, default:false},
+  admin_review: {type: String, default:" "}
 });
 
 const taskSchema = new Schema({

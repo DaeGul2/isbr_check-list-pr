@@ -23,11 +23,10 @@ const AdminSettings = () => {
   const [examDate, setExamDate] = useState('');
   const socket = io(API_URL);
   const navigate = useNavigate();
+  const apiKey = process.env.REACT_APP_API_KEY; // 환경 변수에서 API 키 가져오기
   
 
-  const handleBack = () => {
-    navigate(-1);
-  };
+  
 
   const toggleModal = () => {
     setShowModal(!showModal);
@@ -35,7 +34,13 @@ const AdminSettings = () => {
 
   const handleGetProjects = async () => {
     try {
-      const response = await axiosInstance.get('/api/projects');
+      const response = await axiosInstance.get('/api/projects'
+      ,{
+        headers: {
+          'x-api-key': apiKey // 헤더에 API 키 포함
+        }
+      }
+      );
       setProjectData(response.data.data);
     } catch (e) {
       alert('failed', e);
@@ -46,7 +51,13 @@ const AdminSettings = () => {
     console.log(projectId);
     if (window.confirm('이 프로젝트를 삭제하시겠습니까?')) {
       try {
-        const response = await axiosInstance.delete(`/api/projects/${projectId}`);
+        const response = await axiosInstance.delete(`/api/projects/${projectId}`
+        ,{
+          headers: {
+            'x-api-key': apiKey // 헤더에 API 키 포함
+          }
+        }
+        );
         alert('Project deleted successfully : ',response);
         handleGetProjects();
       } catch (error) {
@@ -66,7 +77,13 @@ const AdminSettings = () => {
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        const response = await axiosInstance.get('/auth/check');
+        const response = await axiosInstance.get('/auth/check'
+        ,{
+          headers: {
+            'x-api-key': apiKey // 헤더에 API 키 포함
+          }
+        }
+        );
         if (!response.data.isAdmin) {
           alert('권한이 없습니다');
           navigate(-1);
@@ -105,7 +122,13 @@ const AdminSettings = () => {
     };
 
     try {
-      const response = await axiosInstance.post('/api/projects/create', payload);
+      const response = await axiosInstance.post('/api/projects/create', payload
+      ,{
+        headers: {
+          'x-api-key': apiKey // 헤더에 API 키 포함
+        }
+      }
+      );
       console.log('Project created:', response.data);
       alert('Project successfully created!');
     } catch (error) {

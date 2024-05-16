@@ -11,6 +11,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.css';  // CSS 파일을 import 합니다.
 
+
 const App = () => {
   return (
     <Router>

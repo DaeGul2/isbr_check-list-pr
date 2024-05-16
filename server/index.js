@@ -9,13 +9,27 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const MongoStore = require('connect-mongo');
 
+const apiKey = process.env.API_KEY; // 안전한 API 키를 설정하세요
+
+// API 키 검증 미들웨어
+function validateApiKey(req, res, next) {
+  const clientApiKey = req.header('x-api-key'); // 헤더에서 API 키 추출
+  if (clientApiKey === apiKey) {
+    next();
+  } else {
+    res.status(403).json({ message: 'Forbidden: Invalid API Key' });
+  }
+}
+
+
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
-    cors: {
-        origin: "*", // 이 설정은 모든 도메인에서 소켓 접속을 허용합니다. 실제 배포시에는 지정된 도메인을 설정해야 합니다.
-        methods: ["GET", "POST"]
-    }
+  cors: {
+    origin: process.env.CLIENT_URL, // 이 설정은 모든 도메인에서 소켓 접속을 허용합니다. 실제 배포시에는 지정된 도메인을 설정해야 합니다.
+    methods: ["GET", "POST","PUT"]
+  }
 });
 
 const PORT = process.env.PORT || 8080;
@@ -28,9 +42,12 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
 
     // Express JSON 미들웨어
     app.use(express.json());
+
     app.use(cors(
-      {origin: 'http://localhost:3000',
-        credentials: true}
+      {
+        origin: process.env.CLIENT_URL||'http://localhost:3000',
+        credentials: true
+      }
     ));
     app.use(
       session({
@@ -42,10 +59,13 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
       })
     );
 
+    // API 키 검증 미들웨어를 /api/로 시작하는 모든 경로에 적용
+    app.use('/', validateApiKey);
+
     // socket.io 연결 설정
     io.on('connection', (socket) => {
       // console.log('새로운 소켓 연결:', socket.id);
-      
+
       socket.on('updateChecklist', (data) => {
         console.log('체크리스트 업데이트:', data);
         io.emit('checklistUpdated', data);
@@ -65,9 +85,9 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
     app.use('/api/projects', projectRoutes);
     app.use('/api/projects', getProjectsRoutes);
     app.use('/api/exams', getExamDetailsRoutes);
-    app.use('/api/examroom',updateExamRoomRoutes);
+    app.use('/api/examroom', updateExamRoomRoutes);
     app.use('/api/projects', updateProjcetsRoutes);
-    app.use('/api/project',getProjectByIdRoutes);
+    app.use('/api/project', getProjectByIdRoutes);
     app.use('/', adminRoutes);
 
     server.listen(PORT, () => {

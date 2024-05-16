@@ -10,6 +10,7 @@ import { Button, Modal, Form } from 'react-bootstrap';
 
 const ExamDetails = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+  const apiKey = process.env.REACT_APP_API_KEY; // 환경 변수에서 API 키 가져오기
   const socket = io(API_URL);
   const [projectData, setProjectData] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
@@ -48,7 +49,13 @@ const ExamDetails = () => {
   const { code } = useParams();
   const handleGetProjects = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/exams?code=${code}`);
+      const response = await axios.get(`${API_URL}/api/exams?code=${code}`,{
+        headers: {
+          'x-api-key': apiKey // 헤더에 API 키 포함
+        }
+      }
+        
+      );
       setProjectData(response.data);
       setIsLoaded(true);
     } catch (error) {
@@ -79,7 +86,11 @@ const ExamDetails = () => {
 
   const updateExamRoom = async (roomData) => {
     try {
-      await axios.put(`${API_URL}/api/examroom`, roomData);
+      await axios.put(`${API_URL}/api/examroom`, roomData ,{
+        headers: {
+          'x-api-key': apiKey // 헤더에 API 키 포함
+        }
+      });
       alert('시험실 정보가 업데이트되었습니다.');
     } catch (error) {
       console.error('시험실 업데이트 실패:', error);
@@ -106,7 +117,11 @@ const ExamDetails = () => {
       toCheckList: [...projectData.toCheckList, ...newChecklistItems]
     };
     try {
-      await axios.put(`${API_URL}/api/projects`, { updatedProjectData });
+      await axios.put(`${API_URL}/api/projects`, { updatedProjectData },{
+        headers: {
+          'x-api-key': apiKey // 헤더에 API 키 포함
+        }
+      });
       alert('체크리스트가 업데이트되었습니다.');
     } catch (error) {
       console.error('체크리스트 업데이트 실패:', error);
