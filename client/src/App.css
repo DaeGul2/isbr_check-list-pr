@@ -40,3 +40,19 @@
 .body-content {
   padding-top: 40px;  /* 네비게이션 바 높이에 맞춰 조정 */
 }
+
+
+/* src/App.css 또는 src/index.css */
+.navbar-logo {
+  height: 40px; /* 원하는 높이로 조정하세요 */
+  width: auto;
+  margin-right: 10px;
+}
+
+.navbar-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+}
