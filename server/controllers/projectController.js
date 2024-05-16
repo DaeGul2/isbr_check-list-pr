@@ -122,7 +122,6 @@ exports.updateExamRoom = async (req, res, io) => {
 exports.updateProject = async (req, res, io) => {
   try {
     const { updatedProjectData } = req.body; // Destructure the project data from request body
-    console.log("씨발 여기", updatedProjectData);
     if (!updatedProjectData._id) {
       return res.status(400).send('Project ID is required');
     }
