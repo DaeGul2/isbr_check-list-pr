@@ -64,7 +64,7 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
 
     // socket.io 연결 설정
     io.on('connection', (socket) => {
-      // console.log('새로운 소켓 연결:', socket.id);
+      console.log('새로운 소켓 연결:', socket.id);
 
       socket.on('updateChecklist', (data) => {
         console.log('체크리스트 업데이트:', data);
