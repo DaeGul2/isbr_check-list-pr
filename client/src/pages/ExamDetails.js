@@ -16,7 +16,7 @@ const ExamDetails = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const navigate = useNavigate();
   const [modalShow, setModalShow] = useState(false);
-  const [newChecklistItems, setNewChecklistItems] = useState(['']);
+  const [newChecklistItems, setNewChecklistItems] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedRooms, setSelectedRooms] = useState(() => {
     const saved = localStorage.getItem('selectedRooms');
@@ -49,14 +49,13 @@ const ExamDetails = () => {
   const { code } = useParams();
   const handleGetProjects = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/exams?code=${code}`,{
+      const response = await axios.get(`${API_URL}/api/exams?code=${code}`, {
         headers: {
           'x-api-key': apiKey // 헤더에 API 키 포함
         }
-      }
-        
-      );
+      });
       setProjectData(response.data);
+      setNewChecklistItems(response.data.toCheckList); // 현재 체크리스트를 모달에 표시하기 위해 설정
       setIsLoaded(true);
     } catch (error) {
       console.error('Failed to fetch project data:', error);
@@ -86,7 +85,7 @@ const ExamDetails = () => {
 
   const updateExamRoom = async (roomData) => {
     try {
-      await axios.put(`${API_URL}/api/examroom`, roomData ,{
+      await axios.put(`${API_URL}/api/examroom`, roomData, {
         headers: {
           'x-api-key': apiKey // 헤더에 API 키 포함
         }
@@ -114,14 +113,15 @@ const ExamDetails = () => {
   const handleAddChecklistItemsToProject = async () => {
     const updatedProjectData = {
       ...projectData,
-      toCheckList: [...projectData.toCheckList, ...newChecklistItems]
+      toCheckList: newChecklistItems
     };
     try {
-      await axios.put(`${API_URL}/api/projects`, { updatedProjectData },{
+      await axios.put(`${API_URL}/api/projects`, { updatedProjectData }, {
         headers: {
           'x-api-key': apiKey // 헤더에 API 키 포함
         }
       });
+      setProjectData(updatedProjectData); // 업데이트된 프로젝트 데이터를 상태에 설정
       alert('체크리스트가 업데이트되었습니다.');
     } catch (error) {
       console.error('체크리스트 업데이트 실패:', error);
@@ -260,27 +260,25 @@ const ExamDetails = () => {
       </div>
 
       <Button variant="danger" style={{ position: 'fixed', bottom: '20px', right: '20px' }} onClick={() => setModalShow(true)}>
-        체크리스트 추가
+        체크리스트 추가/수정
       </Button>
 
       <Modal show={modalShow} onHide={() => setModalShow(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>체크리스트 추가</Modal.Title>
+          <Modal.Title>체크리스트 추가/수정</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {newChecklistItems.map((item, index) => (
             <Form.Group key={index} className="mb-3">
               <Form.Control type="text" value={item} onChange={(e) => handleChecklistItemChange(e, index)} />
-              {newChecklistItems.length > 1 && (
-                <Button variant="danger" onClick={() => handleRemoveChecklistItem(index)}>삭제</Button>
-              )}
+              <Button variant="danger" onClick={() => handleRemoveChecklistItem(index)}>삭제</Button>
             </Form.Group>
           ))}
           <Button onClick={handleAddChecklistItem}>항목 추가</Button>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setModalShow(false)}>닫기</Button>
-          <Button variant="primary" onClick={handleAddChecklistItemsToProject}>추가</Button>
+          <Button variant="primary" onClick={handleAddChecklistItemsToProject}>저장</Button>
         </Modal.Footer>
       </Modal>
     </div>
