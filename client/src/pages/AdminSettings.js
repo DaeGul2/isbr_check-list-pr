@@ -23,10 +23,7 @@ const AdminSettings = () => {
   const [examDate, setExamDate] = useState('');
   const socket = io(API_URL);
   const navigate = useNavigate();
-  const apiKey = process.env.REACT_APP_API_KEY; // 환경 변수에서 API 키 가져오기
-  
-
-  
+  const apiKey = process.env.REACT_APP_API_KEY;
 
   const toggleModal = () => {
     setShowModal(!showModal);
@@ -34,13 +31,11 @@ const AdminSettings = () => {
 
   const handleGetProjects = async () => {
     try {
-      const response = await axiosInstance.get('/api/projects'
-      ,{
+      const response = await axiosInstance.get('/api/projects', {
         headers: {
-          'x-api-key': apiKey // 헤더에 API 키 포함
+          'x-api-key': apiKey
         }
-      }
-      );
+      });
       setProjectData(response.data.data);
     } catch (e) {
       alert('failed', e);
@@ -48,17 +43,14 @@ const AdminSettings = () => {
   };
 
   const handleDelete = async (projectId) => {
-    console.log(projectId);
     if (window.confirm('이 프로젝트를 삭제하시겠습니까?')) {
       try {
-        const response = await axiosInstance.delete(`/api/projects/${projectId}`
-        ,{
+        await axiosInstance.delete(`/api/projects/${projectId}`, {
           headers: {
-            'x-api-key': apiKey // 헤더에 API 키 포함
+            'x-api-key': apiKey
           }
-        }
-        );
-        alert('Project deleted successfully : ',response);
+        });
+        alert('Project deleted successfully');
         handleGetProjects();
       } catch (error) {
         console.error('Failed to delete project:', error);
@@ -68,22 +60,23 @@ const AdminSettings = () => {
   };
 
   const handleEdit = (code) => {
-    // 프로젝트 수정 로직 추가
-    // 예: 수정 모달을 열거나, 해당 프로젝트의 정보를 편집할 수 있는 폼을 표시
     navigate(`/project-detail/${code}`);
   };
 
+  const handleCopyCode = (code) => {
+    navigator.clipboard.writeText(code)
+      .then(() => alert('코드가 클립보드에 복사되었습니다.'))
+      .catch(err => console.error('Failed to copy code:', err));
+  };
 
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        const response = await axiosInstance.get('/auth/check'
-        ,{
+        const response = await axiosInstance.get('/auth/check', {
           headers: {
-            'x-api-key': apiKey // 헤더에 API 키 포함
+            'x-api-key': apiKey
           }
-        }
-        );
+        });
         if (!response.data.isAdmin) {
           alert('권한이 없습니다');
           navigate(-1);
@@ -122,13 +115,11 @@ const AdminSettings = () => {
     };
 
     try {
-      const response = await axiosInstance.post('/api/projects/create', payload
-      ,{
+      const response = await axiosInstance.post('/api/projects/create', payload, {
         headers: {
-          'x-api-key': apiKey // 헤더에 API 키 포함
+          'x-api-key': apiKey
         }
-      }
-      );
+      });
       console.log('Project created:', response.data);
       alert('Project successfully created!');
     } catch (error) {
@@ -162,13 +153,13 @@ const AdminSettings = () => {
   const renderCards = () => {
     return (
       <div className="row">
-        {projectData.map((project, index) => (
+        {projectData.map((project) => (
           <div key={project._id} className="mb-4 col-md-4">
             <div className="shadow-sm card" style={{
               borderRadius: '15px',
               border: '1px solid #e0e0e0',
-              backgroundColor: '#f9f9f9',  // 연한 배경색 추가
-              position: 'relative' // 버튼 위치 조정을 위해 추가
+              backgroundColor: '#f9f9f9',
+              position: 'relative'
             }}>
               <button
                 type="button"
@@ -180,7 +171,7 @@ const AdminSettings = () => {
                 }}
                 onClick={() => handleDelete(project._id)}
               >
-                <i className="bi bi-trash"></i> {/* Bootstrap 아이콘 사용 */}
+                <i className="bi bi-trash"></i>
               </button>
               <button
                 type="button"
@@ -192,16 +183,24 @@ const AdminSettings = () => {
                 }}
                 onClick={() => handleEdit(project.code)}
               >
-                <i className="bi bi-pencil"></i> {/* Bootstrap 아이콘 사용 */}
+                <i className="bi bi-pencil"></i>
               </button>
               <div className="card-body">
                 <p className="card-text"> {new Date(project.examDate).toLocaleDateString()}</p>
                 <h2>{project.projectName}</h2>
-                <p className="card-text"><strong style={{ color: 'red' }}>코드:</strong> {project.code}</p>
+                <p className="card-text">
+                  <strong style={{ color: 'red' }}>코드:</strong> {project.code}
+                  <button
+                    className="btn btn-light btn-sm"
+                    style={{ marginLeft: '10px' }}
+                    onClick={() => handleCopyCode(project.code)}
+                  >
+                    코드 복사
+                  </button>
+                </p>
                 <p className="card-text"><strong>고사장:</strong> {project.venueName}</p>
                 <p className="card-text"><strong>고사실:</strong> {project.numberOfRooms}</p>
                 <p className="card-text"><strong>관리자:</strong> {project.overseers.join(', ')}</p>
-
               </div>
             </div>
           </div>
@@ -212,7 +211,6 @@ const AdminSettings = () => {
 
   return (
     <div className="container">
-
       <button
         className="p-3 btn btn-success rounded-circle"
         onClick={toggleModal}
