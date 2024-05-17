@@ -12,12 +12,11 @@ const NavbarComponent = () => {
         <Button variant="outline-primary" onClick={() => navigate(-1)}>
           <i className="bi bi-arrow-left"></i>
         </Button>
-        
+
         <div className="navbar-center">
-          <img src={`${process.env.PUBLIC_URL}/logo.png`} alt="Logo" className="navbar-logo" />
-          <Navbar.Brand as={Link} to="/" className="mx-auto">
-            인사바른 Check-List
-          </Navbar.Brand>
+          <Link to="/">
+            <img src={`${process.env.PUBLIC_URL}/nav_logo.png`} alt="Logo" className="navbar-logo" />
+          </Link>
         </div>
       </Container>
     </Navbar>
