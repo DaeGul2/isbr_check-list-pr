@@ -57,7 +57,6 @@ exports.addAdminReview = async (req, res, io) => {
   try {
     const { examRoomId } = req.params;
     const { text } = req.body;
-    console.log("코멘트 추가 요청:", examRoomId, text);
 
     // 새로운 리뷰 객체 생성
     const newReview = { text, createdAt: new Date() };
