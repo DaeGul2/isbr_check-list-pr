@@ -43,12 +43,28 @@ const UpdateDetails = () => {
       checkIncompleteRooms(updatedProject.examRooms, updatedProject.toCheckList);
     };
 
+    const handleAdminReviewAdded = ({ examRoomId, newReview }) => {
+      console.log('New comment added:', examRoomId, newReview);
+      setProjectData(prevData => {
+        const updatedRooms = prevData.examRooms.map(room => 
+          room._id === examRoomId ? { ...room, admin_reviews: [...room.admin_reviews, newReview] } : room
+        );
+        return { ...prevData, examRooms: updatedRooms };
+      });
+
+      if (examRoomId === selectedExamRoomId) {
+        setCurrentRoomComments(prevComments => [...prevComments, newReview]);
+      }
+    };
+
     socket.on('projectUpdated', handleProjectUpdated);
+    socket.on('adminReviewAdded', handleAdminReviewAdded);
 
     return () => {
       socket.off('projectUpdated', handleProjectUpdated);
+      socket.off('adminReviewAdded', handleAdminReviewAdded);
     };
-  }, []);
+  }, [selectedExamRoomId]);
 
   const handleGetProjects = async () => {
     try {
