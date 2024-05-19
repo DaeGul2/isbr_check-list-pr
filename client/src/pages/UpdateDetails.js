@@ -12,10 +12,17 @@ const UpdateDetails = () => {
   const [projectData, setProjectData] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [modalShow, setModalShow] = useState(false);
+  const [editModalShow, setEditModalShow] = useState(false);
   const [newChecklistItems, setNewChecklistItems] = useState(['']);
   const [incompleteRooms, setIncompleteRooms] = useState([]);
   const [editingManager, setEditingManager] = useState(null);
   const [selectedRooms, setSelectedRooms] = useState([]);
+  const [editedProjectData, setEditedProjectData] = useState({
+    projectName: '',
+    venueName: '',
+    overseers: [],
+    examDate: ''
+  });
 
   const { code } = useParams();
 
@@ -164,6 +171,56 @@ const UpdateDetails = () => {
     setEditingManager(null);
   };
 
+  const handleEditProject = () => {
+    setEditedProjectData({
+      projectName: projectData.projectName,
+      venueName: projectData.venueName,
+      overseers: projectData.overseers,
+      examDate: projectData.examDate
+    });
+    setEditModalShow(true);
+  };
+
+  const handleProjectDataChange = (e, field) => {
+    setEditedProjectData({ ...editedProjectData, [field]: e.target.value });
+  };
+
+  const handleAddOverseer = () => {
+    setEditedProjectData({ ...editedProjectData, overseers: [...editedProjectData.overseers, ''] });
+  };
+
+  const handleRemoveOverseer = (index) => {
+    setEditedProjectData({ ...editedProjectData, overseers: editedProjectData.overseers.filter((_, idx) => idx !== index) });
+  };
+
+  const handleOverseerChange = (e, index) => {
+    const newOverseers = editedProjectData.overseers.map((overseer, idx) => idx === index ? e.target.value : overseer);
+    setEditedProjectData({ ...editedProjectData, overseers: newOverseers });
+  };
+
+  const handleUpdateProject = async () => {
+    try {
+      const updatedProjectData = {
+        ...projectData,
+        projectName: editedProjectData.projectName,
+        venueName: editedProjectData.venueName,
+        overseers: editedProjectData.overseers,
+        examDate: editedProjectData.examDate
+      };
+      await axios.put(`${API_URL}/api/projects`, { updatedProjectData }, {
+        headers: {
+          'x-api-key': apiKey
+        }
+      });
+      setProjectData(updatedProjectData);
+      alert('프로젝트가 업데이트되었습니다.');
+    } catch (error) {
+      console.error('프로젝트 업데이트 실패:', error);
+      alert('프로젝트 업데이트에 실패했습니다.');
+    }
+    setEditModalShow(false);
+  };
+
   if (!isLoaded) {
     return <div>Loading 중...</div>;
   }
@@ -180,6 +237,9 @@ const UpdateDetails = () => {
           <h2 className="mb-2 card-subtitle text-muted"><i className="fas fa-calendar-alt"></i> 날짜: {formatDate(projectData.examDate)}</h2>
           <Button variant="danger" onClick={() => setModalShow(true)}>
             체크리스트 추가/삭제
+          </Button>
+          <Button variant="warning" onClick={handleEditProject}>
+            프로젝트 수정
           </Button>
         </div>
       </div>
@@ -268,6 +328,40 @@ const UpdateDetails = () => {
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setModalShow(false)}>닫기</Button>
           <Button variant="primary" onClick={handleAddChecklistItemsToProject}>업데이트</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={editModalShow} onHide={() => setEditModalShow(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>프로젝트 수정</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group className="mb-3">
+            <Form.Label>프로젝트명:</Form.Label>
+            <Form.Control type="text" value={editedProjectData.projectName} onChange={(e) => handleProjectDataChange(e, 'projectName')} />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>고사장 명:</Form.Label>
+            <Form.Control type="text" value={editedProjectData.venueName} onChange={(e) => handleProjectDataChange(e, 'venueName')} />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>시험 날짜:</Form.Label>
+            <Form.Control type="date" value={editedProjectData.examDate} onChange={(e) => handleProjectDataChange(e, 'examDate')} />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>담당자:</Form.Label>
+            {editedProjectData.overseers.map((overseer, index) => (
+              <div key={index} className="mb-2 d-flex">
+                <Form.Control type="text" value={overseer} onChange={(e) => handleOverseerChange(e, index)} />
+                <Button variant="danger" onClick={() => handleRemoveOverseer(index)}>삭제</Button>
+              </div>
+            ))}
+            <Button variant="secondary" onClick={handleAddOverseer}>담당자 추가</Button>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setEditModalShow(false)}>닫기</Button>
+          <Button variant="primary" onClick={handleUpdateProject}>저장</Button>
         </Modal.Footer>
       </Modal>
 
