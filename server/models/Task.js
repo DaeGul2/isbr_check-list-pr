@@ -15,7 +15,10 @@ const examRoomSchema = new Schema({
     default: {} // 기본값은 빈 객체
   },
   manager: { type: String, required: true, default: " " },
-  admin_check: { type: Boolean, default: false },
+  admin_check: {
+    checked: { type: Boolean, default: false },
+    checkedAt: { type: Date, default: null }
+  },
   admin_reviews: { type: [reviewSchema], default: [] } // review 배열로 변경
 });
 
