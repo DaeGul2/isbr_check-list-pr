@@ -57,10 +57,11 @@ exports.addAdminReview = async (req, res, io) => {
   try {
     const { examRoomId } = req.params;
     const { text } = req.body;
+    console.log("코멘트 추가 요청:", examRoomId, text);
 
     // 새로운 리뷰 객체 생성
     const newReview = { text, createdAt: new Date() };
-
+    
     // 해당 examRoom을 찾고 admin_review 추가
     const task = await Tasks.findOneAndUpdate(
       { 'examRooms._id': examRoomId },
@@ -69,14 +70,18 @@ exports.addAdminReview = async (req, res, io) => {
     );
 
     if (!task) {
+      console.log("Exam room not found for ID:", examRoomId);
       return res.status(404).json({ message: 'Exam room not found' });
     }
+
+
 
     // 클라이언트에 변경 사항 브로드캐스트
     io.emit('adminReviewAdded', { examRoomId, newReview });
 
     res.json(task);
   } catch (error) {
+    console.error("Server error:", error);
     res.status(500).json({ message: 'Server error', error });
   }
 };

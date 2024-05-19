@@ -86,7 +86,7 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
     const updateProjcetsRoutes = require('./routes/updateProjects')(io);
     const getProjectByIdRoutes = require('./routes/getProjectByIdRoutes');
     const adminRoutes = require('./routes/adminRoutes');
-    const examAdminRoutes = require('./routes/examRoomRoutes')
+    const examAdminRoutes = require('./routes/examAdminRoutes')(io);
 
     // 라우터 등록
     app.use('/api/projects', projectRoutes);

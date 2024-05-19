@@ -13,6 +13,7 @@ const UpdateDetails = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [modalShow, setModalShow] = useState(false);
   const [editModalShow, setEditModalShow] = useState(false);
+  const [commentModalShow, setCommentModalShow] = useState(false);
   const [newChecklistItems, setNewChecklistItems] = useState(['']);
   const [incompleteRooms, setIncompleteRooms] = useState([]);
   const [editingManager, setEditingManager] = useState(null);
@@ -23,6 +24,9 @@ const UpdateDetails = () => {
     overseers: [],
     examDate: ''
   });
+  const [currentCommentText, setCurrentCommentText] = useState('');
+  const [currentRoomComments, setCurrentRoomComments] = useState([]);
+  const [selectedExamRoomId, setSelectedExamRoomId] = useState(null);
 
   const { code } = useParams();
 
@@ -221,6 +225,36 @@ const UpdateDetails = () => {
     setEditModalShow(false);
   };
 
+  const handleAddComment = async (examRoomId) => {
+    try {
+      const response = await axios.put(`${API_URL}/api/examRooms/${examRoomId}/addReview`, 
+        { text: currentCommentText }, 
+        {
+          headers: {
+            'x-api-key': apiKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const updatedProject = response.data;
+      setProjectData(updatedProject);
+      const updatedRoom = updatedProject.examRooms.find(room => room._id === examRoomId);
+      setCurrentRoomComments(updatedRoom.admin_reviews || []);
+      setCurrentCommentText('');
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+      alert('코멘트 추가에 실패했습니다.');
+    }
+  };
+
+  const handleOpenComments = (examRoomId) => {
+    const selectedRoom = projectData.examRooms.find(room => room._id === examRoomId);
+    setCurrentRoomComments(selectedRoom.admin_reviews || []);
+    setSelectedExamRoomId(examRoomId);
+    setCommentModalShow(true);
+  };
+
   if (!isLoaded) {
     return <div>Loading 중...</div>;
   }
@@ -275,6 +309,7 @@ const UpdateDetails = () => {
                       </Button>
                     </span>
                   )}
+                  <Button variant="info" onClick={() => handleOpenComments(room._id)}>코멘트</Button>
                 </td>
               ))}
             </tr>
@@ -362,6 +397,34 @@ const UpdateDetails = () => {
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setEditModalShow(false)}>닫기</Button>
           <Button variant="primary" onClick={handleUpdateProject}>저장</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={commentModalShow} onHide={() => setCommentModalShow(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>코멘트</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            {currentRoomComments.map((comment, index) => (
+              <div key={index} className="mb-2">
+                <div><strong>{new Date(comment.createdAt).toLocaleString('ko-KR')}</strong></div>
+                <div>{comment.text}</div>
+              </div>
+            ))}
+          </div>
+          <Form.Group className="mt-3">
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={currentCommentText}
+              onChange={(e) => setCurrentCommentText(e.target.value)}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setCommentModalShow(false)}>닫기</Button>
+          <Button variant="primary" onClick={() => handleAddComment(selectedExamRoomId)}>전송</Button>
         </Modal.Footer>
       </Modal>
 
