@@ -42,3 +42,36 @@
     color: #555; 
   }
   
+
+  /* ExamDetails.css */
+.comment-text-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comment-text {
+  margin: 0;
+  flex-grow: 1;
+}
+
+.comment-date {
+  font-size: 0.8rem;
+  color: gray;
+  margin-left: 10px;
+  white-space: nowrap;
+}
+
+.new-comment-alert {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: red;
+}

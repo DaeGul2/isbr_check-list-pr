@@ -3,23 +3,23 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import socket from '../Socket'; // 전역 소켓 인스턴스 가져오기
 import './ExamDetails.css';
-import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
-import { Button, Modal, Form } from 'react-bootstrap';
+import { faCheckCircle, faHeart } from '@fortawesome/free-solid-svg-icons';
+import { Badge, Modal, Button } from 'react-bootstrap';
 
 const ExamDetails = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
   const apiKey = process.env.REACT_APP_API_KEY; // 환경 변수에서 API 키 가져오기
   const [projectData, setProjectData] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
-  const [modalShow, setModalShow] = useState(false);
-  const [newChecklistItems, setNewChecklistItems] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedRooms, setSelectedRooms] = useState(() => {
     const saved = localStorage.getItem('selectedRooms');
     return saved ? JSON.parse(saved) : [];
   });
+  const [showModal, setShowModal] = useState(false);
+  const [selectedRoomComments, setSelectedRoomComments] = useState([]);
+  const [selectedRoomNumber, setSelectedRoomNumber] = useState('');
 
   const toggleCard = () => {
     setIsOpen(!isOpen);
@@ -37,10 +37,22 @@ const ExamDetails = () => {
       setProjectData(updatedProject);
     };
 
+    const handleAdminReviewAdded = ({ examRoomId, newReview }) => {
+      console.log('New comment added:', examRoomId, newReview);
+      setProjectData(prevData => {
+        const updatedRooms = prevData.examRooms.map(room =>
+          room._id === examRoomId ? { ...room, admin_reviews: [...room.admin_reviews, newReview] } : room
+        );
+        return { ...prevData, examRooms: updatedRooms };
+      });
+    };
+
     socket.on('projectUpdated', handleProjectUpdated);
+    socket.on('adminReviewAdded', handleAdminReviewAdded);
 
     return () => {
       socket.off('projectUpdated', handleProjectUpdated);
+      socket.off('adminReviewAdded', handleAdminReviewAdded);
     };
   }, []);
 
@@ -49,6 +61,7 @@ const ExamDetails = () => {
   }, [selectedRooms]);
 
   const { code } = useParams();
+
   const handleGetProjects = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/exams?code=${code}`, {
@@ -57,7 +70,6 @@ const ExamDetails = () => {
         }
       });
       setProjectData(response.data);
-      setNewChecklistItems(response.data.toCheckList); // 현재 체크리스트를 모달에 표시하기 위해 설정
       setIsLoaded(true);
     } catch (error) {
       console.error('Failed to fetch project data:', error);
@@ -65,24 +77,25 @@ const ExamDetails = () => {
     }
   };
 
-  const handleManagerChange = (e, index, room) => {
-    const updatedRoom = { ...room, manager: e.target.value };
-    setProjectData(current => {
-      let newData = { ...current };
-      newData.examRooms[index] = updatedRoom;
-      return newData;
-    });
+  const handleManagerChange = (e, index) => {
+    const updatedRooms = projectData.examRooms.map((room, idx) =>
+      idx === index ? { ...room, manager: e.target.value } : room
+    );
+    setProjectData((prevState) => ({
+      ...prevState,
+      examRooms: updatedRooms,
+    }));
   };
 
-  const handleChecklistChange = (e, index, checkItem, room) => {
+  const handleChecklistChange = (e, roomIndex, checkItem) => {
     const newValue = e.target.checked ? '완료' : '미완료';
-    const updatedRoom = { ...room };
-    updatedRoom.checklistItems[checkItem] = newValue;
-    setProjectData(current => {
-      let newData = { ...current };
-      newData.examRooms[index] = updatedRoom;
-      return newData;
-    });
+    const updatedRooms = projectData.examRooms.map((room, idx) =>
+      idx === roomIndex ? { ...room, checklistItems: { ...room.checklistItems, [checkItem]: newValue } } : room
+    );
+    setProjectData((prevState) => ({
+      ...prevState,
+      examRooms: updatedRooms,
+    }));
   };
 
   const updateExamRoom = async (roomData) => {
@@ -97,40 +110,6 @@ const ExamDetails = () => {
       console.error('시험실 업데이트 실패:', error);
       alert('시험실 정보 업데이트에 실패했습니다.');
     }
-  };
-
-  const handleAddChecklistItem = () => {
-    setNewChecklistItems([...newChecklistItems, '']);
-  };
-
-  const handleRemoveChecklistItem = index => {
-    setNewChecklistItems(newChecklistItems.filter((item, idx) => idx !== index));
-  };
-
-  const handleChecklistItemChange = (event, index) => {
-    const updatedItems = newChecklistItems.map((item, idx) => idx === index ? event.target.value : item);
-    setNewChecklistItems(updatedItems);
-  };
-
-  const handleAddChecklistItemsToProject = async () => {
-    const updatedProjectData = {
-      ...projectData,
-      toCheckList: newChecklistItems
-    };
-    try {
-      await axios.put(`${API_URL}/api/projects`, { updatedProjectData }, {
-        headers: {
-          'x-api-key': apiKey // 헤더에 API 키 포함
-        }
-      });
-      setProjectData(updatedProjectData); // 업데이트된 프로젝트 데이터를 상태에 설정
-      alert('체크리스트가 업데이트되었습니다.');
-    } catch (error) {
-      console.error('체크리스트 업데이트 실패:', error);
-      alert('체크리스트 업데이트에 실패했습니다.');
-    }
-
-    setModalShow(false);
   };
 
   const handleRoomSelection = (e) => {
@@ -151,10 +130,42 @@ const ExamDetails = () => {
     }
   };
 
+  const handleOpenModal = (comments, roomNumber) => {
+    setSelectedRoomComments(comments);
+    setSelectedRoomNumber(roomNumber);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedRoomComments([]);
+    setSelectedRoomNumber('');
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     return date.toLocaleDateString('ko-KR', options);
+  };
+
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return date.toLocaleDateString('ko-KR', options);
+  };
+
+  const isRecent = (commentDate) => {
+    const currentTime = new Date();
+    const commentTime = new Date(commentDate);
+    const timeDifference = (currentTime - commentTime) / (1000 * 60); // 시간 차이를 분 단위로 계산
+    return timeDifference < 20;
+  };
+
+  const getElapsedTime = (commentDate) => {
+    const currentTime = new Date();
+    const commentTime = new Date(commentDate);
+    const timeDifference = Math.floor((currentTime - commentTime) / (1000 * 60)); // 시간 차이를 분 단위로 계산
+    return timeDifference;
   };
 
   if (!isLoaded) {
@@ -213,7 +224,7 @@ const ExamDetails = () => {
             </div>
           ))}
         </div>
-        
+
         <div className="row">
           {(selectedRooms.length > 0 ? filteredRooms : projectData.examRooms).map((room, index) => (
             <div className="mb-4 col-md-4" key={room._id}>
@@ -228,7 +239,7 @@ const ExamDetails = () => {
                       type="text"
                       className="form-control"
                       value={room.manager}
-                      onChange={e => handleManagerChange(e, index, room)}
+                      onChange={e => handleManagerChange(e, index)}
                     />
                   </div>
                   {projectData.toCheckList.map((checkItem, idx) => (
@@ -238,21 +249,62 @@ const ExamDetails = () => {
                         className="form-check-input"
                         id={`check-${index}-${idx}`}
                         checked={room.checklistItems[checkItem] === '완료'}
-                        onChange={e => handleChecklistChange(e, index, checkItem, room)}
+                        onChange={e => handleChecklistChange(e, index, checkItem)}
                       />
                       <label className="form-check-label" htmlFor={`check-${index}-${idx}`}>
                         {checkItem}
                       </label>
                     </div>
                   ))}
+                  <div className="mb-3">
+                    <label className="form-label">운영자 코멘트:</label>
+                    {room.admin_reviews && room.admin_reviews.length > 0 ? (
+                      <>
+                        <div style={{ position: 'relative' }}>
+                          <div className="comment-text-container">
+                            <p className="comment-text">
+                              {room.admin_reviews[room.admin_reviews.length - 1].text.length > 18
+                                ? room.admin_reviews[room.admin_reviews.length - 1].text.slice(0, 18) + '...'
+                                : room.admin_reviews[room.admin_reviews.length - 1].text}
+                              <span className="comment-date">
+                                {formatDateTime(room.admin_reviews[room.admin_reviews.length - 1].createdAt)}
+                              </span>
+                            </p>
+                          </div>
+                          {isRecent(room.admin_reviews[room.admin_reviews.length - 1].createdAt) && (
+                            <div className="new-comment-alert">
+                              <FontAwesomeIcon icon={faHeart} className="text-danger" />
+                              <span>
+                                {getElapsedTime(room.admin_reviews[room.admin_reviews.length - 1].createdAt)}분 전 새 메시지!
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <Badge
+                          bg="info"
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => handleOpenModal(room.admin_reviews, room.roomNum)}
+                        >
+                          더보기
+                        </Badge>
+                      </>
+                    ) : (
+                      <p>코멘트 없음</p>
+                    )}
+                  </div>
                 </div>
                 <div className="card-footer text-end">
-                  <FontAwesomeIcon icon={faCheckCircle} className="text-success" style={{ cursor: 'pointer', fontSize: '1.5rem' }} onClick={() => updateExamRoom({
-                    projectId: projectData._id,
-                    roomId: room._id,
-                    manager: room.manager,
-                    checklistItems: room.checklistItems
-                  })} />
+                  <FontAwesomeIcon
+                    icon={faCheckCircle}
+                    className="text-success"
+                    style={{ cursor: 'pointer', fontSize: '1.5rem' }}
+                    onClick={() => updateExamRoom({
+                      projectId: projectData._id,
+                      roomId: room._id,
+                      manager: room.manager,
+                      checklistItems: room.checklistItems
+                    })}
+                  />
                   <span style={{ fontFamily: 'Indie Flower', fontSize: '1rem', marginLeft: '10px' }}>업데이트</span>
                 </div>
               </div>
@@ -261,26 +313,22 @@ const ExamDetails = () => {
         </div>
       </div>
 
-      <Button variant="danger" style={{ position: 'fixed', bottom: '20px', right: '20px' }} onClick={() => setModalShow(true)}>
-        체크리스트 추가/수정
-      </Button>
-
-      <Modal show={modalShow} onHide={() => setModalShow(false)}>
+      <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
-          <Modal.Title>체크리스트 추가/수정</Modal.Title>
+          <Modal.Title>고사실 {selectedRoomNumber} 코멘트</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {newChecklistItems.map((item, index) => (
-            <Form.Group key={index} className="mb-3">
-              <Form.Control type="text" value={item} onChange={(e) => handleChecklistItemChange(e, index)} />
-              <Button variant="danger" onClick={() => handleRemoveChecklistItem(index)}>삭제</Button>
-            </Form.Group>
+          {selectedRoomComments.map((comment, idx) => (
+            <div key={idx} className="mb-2">
+              <strong>{formatDateTime(comment.createdAt)}</strong>
+              <p>{comment.text}</p>
+            </div>
           ))}
-          <Button onClick={handleAddChecklistItem}>항목 추가</Button>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setModalShow(false)}>닫기</Button>
-          <Button variant="primary" onClick={handleAddChecklistItemsToProject}>저장</Button>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            닫기
+          </Button>
         </Modal.Footer>
       </Modal>
     </div>
