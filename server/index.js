@@ -28,7 +28,8 @@ const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: process.env.CLIENT_URL, // 이 설정은 모든 도메인에서 소켓 접속을 허용합니다. 실제 배포시에는 지정된 도메인을 설정해야 합니다.
-    methods: ["GET", "POST","PUT"]
+    methods: ["GET", "POST", "PUT"],
+    credentials: true
   }
 });
 
@@ -45,7 +46,7 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
 
     app.use(cors(
       {
-        origin: process.env.CLIENT_URL||'http://localhost:3000',
+        origin: process.env.CLIENT_URL || 'http://localhost:3000',
         credentials: true
       }
     ));
@@ -65,6 +66,11 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
     // socket.io 연결 설정
     io.on('connection', (socket) => {
       console.log('새로운 소켓 연결:', socket.id);
+
+      socket.on('disconnect', () => {
+        console.log('소켓 연결 종료:', socket.id);
+      });
+
 
       socket.on('updateChecklist', (data) => {
         console.log('체크리스트 업데이트:', data);

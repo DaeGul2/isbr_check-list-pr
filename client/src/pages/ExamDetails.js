@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import io from 'socket.io-client';
+import socket from '../Socket'; // 전역 소켓 인스턴스 가져오기
 import './ExamDetails.css';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -11,10 +11,8 @@ import { Button, Modal, Form } from 'react-bootstrap';
 const ExamDetails = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
   const apiKey = process.env.REACT_APP_API_KEY; // 환경 변수에서 API 키 가져오기
-  const socket = io(API_URL);
   const [projectData, setProjectData] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
-  const navigate = useNavigate();
   const [modalShow, setModalShow] = useState(false);
   const [newChecklistItems, setNewChecklistItems] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -28,6 +26,10 @@ const ExamDetails = () => {
   };
 
   useEffect(() => {
+    if (!socket.connected) {
+      socket.connect(); // 소켓 연결
+    }
+
     handleGetProjects();
 
     const handleProjectUpdated = (updatedProject) => {

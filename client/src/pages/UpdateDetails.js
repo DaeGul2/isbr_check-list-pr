@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import io from 'socket.io-client';
+import socket from '../Socket'; // 전역 소켓 인스턴스 가져오기
 import { Button, Modal, Form, Badge, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faEdit } from '@fortawesome/free-solid-svg-icons';
@@ -9,7 +9,6 @@ import { faCheckCircle, faEdit } from '@fortawesome/free-solid-svg-icons';
 const UpdateDetails = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
   const apiKey = process.env.REACT_APP_API_KEY;
-  const socket = io(API_URL);
   const [projectData, setProjectData] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [modalShow, setModalShow] = useState(false);
@@ -21,6 +20,10 @@ const UpdateDetails = () => {
   const { code } = useParams();
 
   useEffect(() => {
+    if (!socket.connected) {
+      socket.connect(); // 소켓 연결
+    }
+
     handleGetProjects();
 
     const handleProjectUpdated = (updatedProject) => {
@@ -78,7 +81,7 @@ const UpdateDetails = () => {
         checklistItems: roomData.checklistItems
       };
 
-      const response = await axios.put(`${API_URL}/api/examroom`, payload, {
+      await axios.put(`${API_URL}/api/examroom`, payload, {
         headers: {
           'x-api-key': apiKey
         }
@@ -286,7 +289,7 @@ const UpdateDetails = () => {
           ))}
         </div>
         {selectedRooms.length > 0 && (
-          <div className="row mt-3">
+          <div className="mt-3 row">
             {selectedRooms.map(roomNum => {
               const room = incompleteRooms.find(r => r.roomNum === roomNum);
               return (

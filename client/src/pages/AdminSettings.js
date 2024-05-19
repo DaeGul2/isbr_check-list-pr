@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import styles from './AdminSettings.module.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import io from 'socket.io-client';
+import socket from '../Socket';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
@@ -21,7 +20,6 @@ const AdminSettings = () => {
   const [numberOfRooms, setNumberOfRooms] = useState(0);
   const [checkListItems, setCheckListItems] = useState([]);
   const [examDate, setExamDate] = useState('');
-  const socket = io(API_URL);
   const navigate = useNavigate();
   const apiKey = process.env.REACT_APP_API_KEY;
 
@@ -29,7 +27,7 @@ const AdminSettings = () => {
     setShowModal(!showModal);
   };
 
-  const handleGetProjects = async () => {
+  const handleGetProjects = useCallback(async () => {
     try {
       const response = await axiosInstance.get('/api/projects', {
         headers: {
@@ -40,7 +38,7 @@ const AdminSettings = () => {
     } catch (e) {
       alert('failed', e);
     }
-  };
+  }, [apiKey]);
 
   const handleDelete = async (projectId) => {
     if (window.confirm('이 프로젝트를 삭제하시겠습니까?')) {
@@ -70,6 +68,10 @@ const AdminSettings = () => {
   };
 
   useEffect(() => {
+    if (!socket.connected) {
+      socket.connect(); // 소켓 연결
+    }
+
     const checkAdmin = async () => {
       try {
         const response = await axiosInstance.get('/auth/check', {
@@ -102,7 +104,7 @@ const AdminSettings = () => {
     return () => {
       socket.off('projectCreated', handleProjectCreated);
     };
-  }, [navigate]);
+  }, [navigate, apiKey, handleGetProjects]);
 
   const handleSubmit = async () => {
     const payload = {
