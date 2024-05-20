@@ -288,6 +288,7 @@ const UpdateDetails = () => {
           <Button variant="danger" onClick={() => setModalShow(true)}>
             체크리스트 추가/삭제
           </Button>
+          {' '}
           <Button variant="warning" onClick={handleEditProject}>
             프로젝트 수정
           </Button>
