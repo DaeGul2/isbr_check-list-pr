@@ -4,7 +4,7 @@ import axios from 'axios';
 import socket from '../Socket'; // 전역 소켓 인스턴스 가져오기
 import { Button, Modal, Form, Badge, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheckCircle, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle, faEdit, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 
 const UpdateDetails = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
@@ -46,7 +46,7 @@ const UpdateDetails = () => {
     const handleAdminReviewAdded = ({ examRoomId, newReview }) => {
       console.log('New comment added:', examRoomId, newReview);
       setProjectData(prevData => {
-        const updatedRooms = prevData.examRooms.map(room => 
+        const updatedRooms = prevData.examRooms.map(room =>
           room._id === examRoomId ? { ...room, admin_reviews: [...room.admin_reviews, newReview] } : room
         );
         return { ...prevData, examRooms: updatedRooms };
@@ -243,8 +243,8 @@ const UpdateDetails = () => {
 
   const handleAddComment = async (examRoomId) => {
     try {
-      const response = await axios.put(`${API_URL}/api/examRooms/${examRoomId}/addReview`, 
-        { text: currentCommentText }, 
+      const response = await axios.put(`${API_URL}/api/examRooms/${examRoomId}/addReview`,
+        { text: currentCommentText },
         {
           headers: {
             'x-api-key': apiKey,
@@ -299,9 +299,9 @@ const UpdateDetails = () => {
         <table className="table table-bordered table-striped table-hover" style={{ minWidth: '1000px', tableLayout: 'fixed', fontSize: '0.8rem' }}>
           <thead>
             <tr>
-              <th style={{ position: 'sticky', top: 0, background: 'white', zIndex: 2 }}>체크리스트</th>
+              <th style={{ position: 'sticky', top: 0, background: 'white', zIndex: 2, width: '130px' }}>체크리스트</th>
               {projectData.examRooms.map((room, index) => (
-                <th key={index} style={{ position: 'sticky', top: 0, background: 'white', zIndex: 2 }}>{room.roomNum}</th>
+                <th key={index} style={{ position: 'sticky', top: 0, background: 'white', zIndex: 2, width: '80px' }}>{room.roomNum} 고사실</th>
               ))}
             </tr>
           </thead>
@@ -321,12 +321,11 @@ const UpdateDetails = () => {
                   ) : (
                     <span>
                       {room.manager}{' '}
-                      <Button variant="link" size="sm" onClick={() => handleEditManager(room.roomNum)}>
+                      <Button variant="link" size="sm" style={{ padding: '0', fontSize: '0.7rem' }} onClick={() => handleEditManager(room.roomNum)}>
                         <FontAwesomeIcon icon={faEdit} />
                       </Button>
                     </span>
                   )}
-                  <Button variant="info" onClick={() => handleOpenComments(room._id)}>코멘트</Button>
                 </td>
               ))}
             </tr>
@@ -357,6 +356,17 @@ const UpdateDetails = () => {
                   })} size="sm">
                     <FontAwesomeIcon icon={faCheckCircle} />
                   </Button>
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td>코멘트</td>
+              {projectData.examRooms.map((room, index) => (
+                <td key={index}>
+                  <Button variant="link" size="sm" style={{ padding: '0', fontSize: '0.7rem', color: '#fff', backgroundColor: '#87CEEB', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px' }} onClick={() => handleOpenComments(room._id)}>
+                    <FontAwesomeIcon icon={faEnvelope} />
+                  </Button>
+
                 </td>
               ))}
             </tr>
