@@ -495,10 +495,8 @@ function getBackgroundColor(status) {
   switch (status) {
     case '완료':
       return '#ccffcc'; // Light green
-    case '미완료':
-      return '#ffcccc'; // Light red
     default:
-      return '#ffffff'; // White
+      return '#ffcccc'; // Light red
   }
 }
 
