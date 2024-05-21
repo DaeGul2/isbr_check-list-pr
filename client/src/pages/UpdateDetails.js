@@ -299,7 +299,7 @@ const UpdateDetails = () => {
         <table className="table table-bordered table-striped table-hover" style={{ minWidth: '1000px', tableLayout: 'fixed', fontSize: '0.8rem' }}>
           <thead>
             <tr>
-              <th style={{ position: 'sticky', top: 0, background: 'white', zIndex: 2, width: '130px' }}>체크리스트</th>
+              <th style={{ position: 'sticky', top: 0, left: 0, background: 'white', zIndex: 3, width: '130px' }}>체크리스트</th>
               {projectData.examRooms.map((room, index) => (
                 <th key={index} style={{ position: 'sticky', top: 0, background: 'white', zIndex: 2, width: '80px' }}>{room.roomNum} 고사실</th>
               ))}
@@ -307,7 +307,7 @@ const UpdateDetails = () => {
           </thead>
           <tbody>
             <tr>
-              <td>담당자</td>
+              <td style={{ position: 'sticky', left: 0, background: 'white', zIndex: 1 }}>담당자</td>
               {projectData.examRooms.map((room, index) => (
                 <td key={index}>
                   {editingManager === room.roomNum ? (
@@ -331,7 +331,7 @@ const UpdateDetails = () => {
             </tr>
             {projectData.toCheckList.map((item, idx) => (
               <tr key={idx}>
-                <td>{item}</td>
+                <td style={{ position: 'sticky', left: 0, background: 'white', zIndex: 1 }}>{item}</td>
                 {projectData.examRooms.map((room, index) => (
                   <td key={index} style={{ backgroundColor: getBackgroundColor(room.checklistItems[item]) }}>
                     <input
@@ -345,7 +345,7 @@ const UpdateDetails = () => {
               </tr>
             ))}
             <tr>
-              <td>업데이트</td>
+              <td style={{ position: 'sticky', left: 0, background: 'white', zIndex: 1 }}>업데이트</td>
               {projectData.examRooms.map((room, index) => (
                 <td key={index}>
                   <Button variant="success" onClick={() => updateExamRoom({
@@ -360,19 +360,21 @@ const UpdateDetails = () => {
               ))}
             </tr>
             <tr>
-              <td>코멘트</td>
+              <td style={{ position: 'sticky', left: 0, background: 'white', zIndex: 1 }}>코멘트</td>
               {projectData.examRooms.map((room, index) => (
                 <td key={index}>
                   <Button variant="link" size="sm" style={{ padding: '0', fontSize: '0.7rem', color: '#fff', backgroundColor: '#87CEEB', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px' }} onClick={() => handleOpenComments(room._id)}>
                     <FontAwesomeIcon icon={faEnvelope} />
                   </Button>
-
                 </td>
               ))}
             </tr>
           </tbody>
         </table>
       </div>
+      
+
+
 
       <Modal show={modalShow} onHide={() => setModalShow(false)}>
         <Modal.Header closeButton>
